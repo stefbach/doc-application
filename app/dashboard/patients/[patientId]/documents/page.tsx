@@ -1,19 +1,29 @@
-import { searchPatients } from "@/app/actions/patient-actions"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import Link from "next/link"
-import { List, Search } from "lucide-react"
+import type React from "react"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
+import PatientDocumentManager from "@/components/patient-document-manager"
+import { getDocumentsForPatient, getPatientDetails, type PatientDetailsType } from "@/app/actions/document-actions" // Importez PatientDetailsType
+import { AlertTriangle, UserCircle, Mail, Phone, MapPin, Scale, TrendingUp, FileTextIcon } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 
-interface PatientsPageProps {
-  searchParams?: {
-    query?: string
-  }
+// Helper pour afficher une information si elle existe
+const DetailItem = ({
+  label,
+  value,
+  icon: Icon,
+}: { label: string; value: string | number | null | undefined; icon?: React.ElementType }) => {
+  if (value === null || value === undefined || value === "") return null
+  return (
+    <div className="flex items-start text-sm">
+      {Icon && <Icon className="mr-2 h-4 w-4 text-muted-foreground mt-0.5" />}
+      <span className="font-medium text-muted-foreground">{label}:&nbsp;</span>
+      <span>{value}</span>
+    </div>
+  )
 }
 
-export default async function PatientsPage({ searchParams }: PatientsPageProps) {
+export default async function PatientDocumentsPage({ params }: { params: { patientId: string } }) {
   const supabase = createSupabaseServerClient()
   const {
     data: { user },
@@ -23,114 +33,64 @@ export default async function PatientsPage({ searchParams }: PatientsPageProps) 
     redirect("/login")
   }
 
-  const query = searchParams?.query || ""
-  let patients
-  if (query) {
-    patients = await searchPatients(query)
-  } else {
-    // Optionnel: afficher tous les patients ou les plus récents si pas de recherche
-    // Pour l'instant, on peut ne rien afficher ou un message
-    // patients = await getAllPatients(); // Décommentez pour afficher tous les patients par défaut
+  const patientId = params.patientId
+  if (!patientId) {
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Erreur</AlertTitle>
+        <AlertDescription>ID du patient manquant.</AlertDescription>
+      </Alert>
+    )
   }
+
+  const patientDetails: PatientDetailsType | null = await getPatientDetails(patientId) // Utilisez PatientDetailsType
+  if (!patientDetails) {
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Patient non trouvé</AlertTitle>
+        <AlertDescription>
+          Aucun patient trouvé avec l'ID: {patientId}. Veuillez vérifier l'ID ou créer ce patient.
+        </AlertDescription>
+      </Alert>
+    )
+  }
+
+  const initialDocuments = await getDocumentsForPatient(patientId)
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Search className="mr-2 h-6 w-6" />
-            Rechercher un Patient
+            <UserCircle className="mr-2 h-7 w-7" />
+            {patientDetails.full_name || `Patient ${patientId.substring(0, 8)}...`}
           </CardTitle>
-          <CardDescription>Entrez le nom ou une partie du nom du patient pour trouver son dossier.</CardDescription>
+          <CardDescription>Informations détaillées du patient.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <form method="GET" action="/dashboard/patients" className="flex gap-2 mb-6">
-            <Input
-              type="search"
-              name="query"
-              placeholder="Nom du patient..."
-              defaultValue={query}
-              className="flex-grow"
-              aria-label="Rechercher un patient"
+        <CardContent className="space-y-3">
+          <DetailItem label="Email" value={patientDetails.email} icon={Mail} />
+          <DetailItem label="Téléphone" value={patientDetails.numero_de_telephone} icon={Phone} />
+          <DetailItem label="Adresse" value={patientDetails.adresse} icon={MapPin} />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <DetailItem label="Poids" value={patientDetails.poids ? `${patientDetails.poids} kg` : null} icon={Scale} />
+            <DetailItem
+              label="Taille"
+              value={patientDetails.taille ? `${patientDetails.taille} cm` : null}
+              icon={TrendingUp}
             />
-            <Button type="submit">
-              <Search className="mr-2 h-4 w-4" /> Rechercher
-            </Button>
-          </form>
-
-          {/* Affichage des résultats */}
-          {query && patients && patients.length > 0 && (
-            <div>
-              <h2 className="text-xl font-semibold mb-3">Résultats de la recherche pour "{query}"</h2>
-              <ul className="space-y-2">
-                {patients.map((patient) => (
-                  <li key={patient.id} className="border p-3 rounded-md hover:bg-accent">
-                    <Link
-                      href={`/dashboard/patients/${patient.id}/documents`}
-                      className="flex justify-between items-center"
-                    >
-                      <span>{patient.full_name || "Nom non disponible"}</span>
-                      <Button variant="outline" size="sm">
-                        Voir Documents
-                      </Button>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {query && patients && patients.length === 0 && (
-            <p className="text-muted-foreground">Aucun patient trouvé pour "{query}".</p>
-          )}
-
-          {!query && (
-            <div className="text-center text-muted-foreground py-8">
-              <List className="mx-auto h-12 w-12 mb-4 text-gray-400" />
-              <p>Veuillez entrer un nom pour commencer la recherche de patients.</p>
-              <p className="text-sm mt-2">
-                Ou vous pouvez{" "}
-                <Link href="/dashboard/patients/add" className="underline hover:text-primary">
-                  ajouter un nouveau patient
-                </Link>
-                .
-              </p>{" "}
-              {/* Lien optionnel vers une page d'ajout */}
-            </div>
-          )}
+            <DetailItem label="IMC" value={patientDetails.bmi} icon={FileTextIcon} />
+          </div>
         </CardContent>
       </Card>
-      {/* 
-        Optionnel: Section pour afficher tous les patients si aucune recherche n'est active
-        et si vous avez décommenté `getAllPatients()`
-      */}
-      {/* !query && allPatients && allPatients.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <List className="mr-2 h-6 w-6" />
-              Tous les Patients
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              {allPatients.map((patient) => (
-                <li key={patient.id} className="border p-3 rounded-md hover:bg-accent">
-                  <Link
-                    href={`/dashboard/patients/${patient.id}/documents`}
-                    className="flex justify-between items-center"
-                  >
-                    <span>{patient.full_name || "Nom non disponible"}</span>
-                    <Button variant="outline" size="sm">
-                      Voir Documents
-                    </Button>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )*/}
+
+      {/* Le gestionnaire de documents reste ici */}
+      <PatientDocumentManager
+        patientId={patientId}
+        initialDocuments={initialDocuments}
+        patientName={patientDetails.full_name || `Patient ${patientId.substring(0, 8)}...`}
+      />
     </div>
   )
 }
