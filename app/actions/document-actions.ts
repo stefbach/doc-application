@@ -12,6 +12,7 @@ export interface DocumentType {
   file_size: number | null
   uploaded_at: string
   user_id: string | null
+  document_category: string | null
 }
 
 interface NewDocumentMetadata {
@@ -20,18 +21,26 @@ interface NewDocumentMetadata {
   storage_path: string
   file_type?: string
   file_size?: number
+  document_category: string
 }
 
-// Nouvelle interface pour les détails complets du patient
 export interface PatientDetailsType {
   id: string
   full_name: string | null
   email: string | null
-  numero_de_telephone: string | null
-  adresse: string | null
-  poids: number | null // ex: en kg
-  taille: number | null // ex: en cm
-  bmi: number | null // Indice de Masse Corporelle
+  phone: string | null
+  poids: number | null
+  taille: number | null
+  bmi: number | null
+  // Ajout des champs spécifiques aux documents de la table patients
+  facture_envoye: boolean | null
+  medical_agrement: boolean | null
+  consent_form: boolean | null
+  compte_rendu_hospitalisation: string | null
+  compte_rendu_consultation: string | null
+  patient_s2_form: string | null
+  lettre_gp: string | null
+  // Ajoutez d'autres champs de la table 'patients' que vous voulez afficher ici
 }
 
 export async function getPatientDetails(patientId: string): Promise<PatientDetailsType | null> {
@@ -40,7 +49,12 @@ export async function getPatientDetails(patientId: string): Promise<PatientDetai
 
   const { data: patient, error } = await supabase
     .from("patients")
-    .select("id, full_name, email, numero_de_telephone, adresse, poids, taille, bmi") // Champs mis à jour
+    .select(`
+      id, full_name, email, phone, poids, taille, bmi,
+      facture_envoye, medical_agrement, consent_form,
+      compte_rendu_hospitalisation, compte_rendu_consultation,
+      patient_s2_form, lettre_gp
+    `) // Ajout des nouvelles colonnes ici
     .eq("id", patientId)
     .maybeSingle()
 
@@ -48,7 +62,7 @@ export async function getPatientDetails(patientId: string): Promise<PatientDetai
     console.error(`Error fetching patient details for ID ${patientId}:`, error.message)
     return null
   }
-  return patient as PatientDetailsType | null // Cast vers la nouvelle interface
+  return patient as PatientDetailsType | null
 }
 
 export async function getDocumentsForPatient(patientId: string): Promise<DocumentType[]> {
@@ -127,3 +141,4 @@ export async function deleteDocumentAction(documentId: string, storagePath: stri
     revalidatePath(`/dashboard/patients/${documentData.patient_id}/documents`)
   }
 }
+
