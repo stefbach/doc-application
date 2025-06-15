@@ -2,7 +2,41 @@
 
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { unstable_noStore as noStore } from "next/cache" // Assurez-vous que cet import est présent
 
+// Fonction searchPatients restaurée
+export async function searchPatients(query: string) {
+  noStore() // Empêche la mise en cache des résultats de recherche
+  const supabase = createSupabaseServerClient()
+
+  if (!query) {
+    const { data, error } = await supabase
+      .from("patients")
+      .select("id, full_name")
+      .order("full_name", { ascending: true })
+
+    if (error) {
+      console.error("Error fetching all patients:", error)
+      return []
+    }
+    return data || []
+  }
+
+  const { data, error } = await supabase
+    .from("patients")
+    .select("id, full_name")
+    .ilike("full_name", `%${query}%`) // Recherche insensible à la casse
+    .order("full_name", { ascending: true })
+
+  if (error) {
+    console.error("Error searching patients:", error)
+    return []
+  }
+
+  return data || []
+}
+
+// Le reste de vos interfaces et fonctions existantes dans ce fichier :
 export interface DocumentType {
   id: string
   patient_id: string
@@ -32,7 +66,6 @@ export interface PatientDetailsType {
   poids: number | null
   taille: number | null
   bmi: number | null
-  // Ajout des champs spécifiques aux documents de la table patients
   facture_envoye: boolean | null
   medical_agrement: boolean | null
   consent_form: boolean | null
@@ -40,7 +73,6 @@ export interface PatientDetailsType {
   compte_rendu_consultation: string | null
   patient_s2_form: string | null
   lettre_gp: string | null
-  // Ajoutez d'autres champs de la table 'patients' que vous voulez afficher ici
 }
 
 export async function getPatientDetails(patientId: string): Promise<PatientDetailsType | null> {
@@ -54,7 +86,7 @@ export async function getPatientDetails(patientId: string): Promise<PatientDetai
       facture_envoye, medical_agrement, consent_form,
       compte_rendu_hospitalisation, compte_rendu_consultation,
       patient_s2_form, lettre_gp
-    `) // Ajout des nouvelles colonnes ici
+    `)
     .eq("id", patientId)
     .maybeSingle()
 
@@ -106,7 +138,7 @@ export async function addDocumentMetadata(metadata: NewDocumentMetadata): Promis
 
 export async function getSignedUrlForDownload(filePath: string): Promise<string | null> {
   const supabase = createSupabaseServerClient()
-  const { data, error } = await supabase.storage.from("patient-documents").createSignedUrl(filePath, 60 * 5) // <-- NOM DU BUCKET CORRIGÉ
+  const { data, error } = await supabase.storage.from("patient-documents").createSignedUrl(filePath, 60 * 5)
 
   if (error) {
     console.error("Error creating signed URL:", error.message)
@@ -118,7 +150,7 @@ export async function getSignedUrlForDownload(filePath: string): Promise<string 
 export async function deleteDocumentAction(documentId: string, storagePath: string): Promise<void> {
   const supabase = createSupabaseServerClient()
 
-  const { error: storageError } = await supabase.storage.from("patient-documents").remove([storagePath]) // <-- NOM DU BUCKET CORRIGÉ
+  const { error: storageError } = await supabase.storage.from("patient-documents").remove([storagePath])
 
   if (storageError) {
     console.error("Error deleting file from storage:", storageError.message)
@@ -141,3 +173,4 @@ export async function deleteDocumentAction(documentId: string, storagePath: stri
     revalidatePath(`/dashboard/patients/${documentData.patient_id}/documents`)
   }
 }
+
