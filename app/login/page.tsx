@@ -9,12 +9,14 @@ export default async function LoginPage() {
   } = await supabase.auth.getSession()
 
   if (session) {
-    redirect("/") // Ou vers le dashboard principal
+    redirect("/dashboard/patients")
   }
 
   return (
     <div className="flex justify-center items-center min-h-[calc(100vh-10rem)]">
-      <AuthForm />
+      {/* The AuthForm is now self-contained with Card styling */}
+      {/* So we might not need another Card wrapper here unless desired for extra padding/layout */}
+      <AuthForm type="sign-in" />
     </div>
   )
 }
