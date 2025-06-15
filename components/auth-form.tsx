@@ -1,97 +1,121 @@
 "use client"
 
-import React from "react"
-
+import type React from "react"
 import { useState } from "react"
-import { createSupabaseBrowserClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
+import { type FieldValues, type SubmitHandler, useForm } from "react-hook-form"
+import * as z from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/components/ui/use-toast"
-import { Loader2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
+import { toast } from "react-hot-toast"
+import type { AuthResponse } from "@supabase/supabase-js"
+import { getSingletonSupabaseBrowserClient } from "@/lib/supabase/client"
 
-export default function AuthForm() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [isSignUp, setIsSignUp] = useState(false)
-  const [loading, setLoading] = useState(false)
+interface AuthFormProps {
+  type: "sign-in" | "sign-up"
+  className?: string
+}
+
+const formSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  password: z.string().min(8, {
+    message: "Password must be at least 8 characters.",
+  }),
+})
+
+const AuthForm: React.FC<AuthFormProps> = ({ type, className }) => {
+  const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const supabase = React.useMemo(() => createSupabaseBrowserClient(), [])
-  const { toast } = useToast()
+  const supabase = getSingletonSupabaseBrowserClient()
 
-  const handleAuth = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setLoading(true)
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  })
+
+  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
+    setIsLoading(true)
+
     try {
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({ email, password })
-        if (error) throw error
-        toast({
-          title: "Inscription réussie!",
-          description: "Veuillez vérifier votre email pour confirmer votre compte.",
+      if (type === "sign-in") {
+        const { error }: AuthResponse = await supabase.auth.signInWithPassword({
+          email: data.email,
+          password: data.password,
         })
-        // router.push("/"); // Redirection après inscription ou attente de confirmation
+
+        if (error) {
+          toast.error(error.message)
+        } else {
+          toast.success("Signed in successfully!")
+          router.refresh()
+          router.push("/dashboard")
+        }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) throw error
-        toast({ title: "Connexion réussie!" })
-        router.push("/") // Redirige vers la page d'accueil/dashboard
-        router.refresh() // Important pour que le layout se mette à jour
+        const { error }: AuthResponse = await supabase.auth.signUp({
+          email: data.email,
+          password: data.password,
+          options: {
+            emailRedirectTo: `${location.origin}/auth/callback`,
+          },
+        })
+
+        if (error) {
+          toast.error(error.message)
+        } else {
+          toast.success("Confirmation email sent!")
+          router.push("/auth/verify-email")
+        }
       }
     } catch (error: any) {
-      toast({ title: "Erreur d'authentification", description: error.message, variant: "destructive" })
+      toast.error(error.message || "Something went wrong!")
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader>
-        <CardTitle>{isSignUp ? "Créer un compte" : "Se connecter"}</CardTitle>
-        <CardDescription>
-          {isSignUp
-            ? "Entrez vos informations pour créer un compte."
-            : "Entrez vos identifiants pour accéder à votre compte."}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleAuth} className="space-y-4">
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="nom@example.com"
-            />
-          </div>
-          <div>
-            <Label htmlFor="password">Mot de passe</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              placeholder="••••••••"
-            />
-          </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSignUp ? "S'inscrire" : "Se connecter"}
+    <div className={cn("w-full flex justify-center", className)}>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input placeholder="mail@example.com" {...field} type="email" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input placeholder="Password" {...field} type="password" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button disabled={isLoading} className="w-full" type="submit">
+            {type === "sign-in" ? "Sign In" : "Sign Up"}
           </Button>
         </form>
-      </CardContent>
-      <CardFooter className="flex justify-center">
-        <Button variant="link" onClick={() => setIsSignUp(!isSignUp)}>
-          {isSignUp ? "Déjà un compte? Se connecter" : "Pas de compte? S'inscrire"}
-        </Button>
-      </CardFooter>
-    </Card>
+      </Form>
+    </div>
   )
 }
+
+export default AuthForm
