@@ -22,13 +22,25 @@ interface NewDocumentMetadata {
   file_size?: number
 }
 
-export async function getPatientDetails(patientId: string): Promise<{ id: string; full_name: string | null } | null> {
-  if (!patientId) return null // Added a guard for empty patientId
+// Nouvelle interface pour les détails complets du patient
+export interface PatientDetailsType {
+  id: string
+  full_name: string | null
+  email: string | null
+  numero_de_telephone: string | null
+  adresse: string | null
+  poids: number | null // ex: en kg
+  taille: number | null // ex: en cm
+  bmi: number | null // Indice de Masse Corporelle
+}
+
+export async function getPatientDetails(patientId: string): Promise<PatientDetailsType | null> {
+  if (!patientId) return null
   const supabase = createSupabaseServerClient()
-  // Corrected 'name' to 'full_name'
+
   const { data: patient, error } = await supabase
     .from("patients")
-    .select("id, full_name")
+    .select("id, full_name, email, numero_de_telephone, adresse, poids, taille, bmi") // Champs mis à jour
     .eq("id", patientId)
     .maybeSingle()
 
@@ -36,7 +48,7 @@ export async function getPatientDetails(patientId: string): Promise<{ id: string
     console.error(`Error fetching patient details for ID ${patientId}:`, error.message)
     return null
   }
-  return patient as { id: string; full_name: string | null } // Ensure correct type casting
+  return patient as PatientDetailsType | null // Cast vers la nouvelle interface
 }
 
 export async function getDocumentsForPatient(patientId: string): Promise<DocumentType[]> {
@@ -72,8 +84,6 @@ export async function addDocumentMetadata(metadata: NewDocumentMetadata): Promis
 
   if (error) {
     console.error("Error adding document metadata:", error.message)
-    // Potentiellement, supprimer le fichier du storage si l'insertion échoue
-    // await supabase.storage.from('patient_documents').remove([metadata.storage_path]);
     throw new Error(`Failed to add document metadata: ${error.message}`)
   }
   revalidatePath(`/dashboard/patients/${metadata.patient_id}/documents`)
@@ -82,9 +92,7 @@ export async function addDocumentMetadata(metadata: NewDocumentMetadata): Promis
 
 export async function getSignedUrlForDownload(filePath: string): Promise<string | null> {
   const supabase = createSupabaseServerClient()
-  const { data, error } = await supabase.storage
-    .from("patient_documents") // Assurez-vous que ce nom de bucket correspond
-    .createSignedUrl(filePath, 60 * 5) // URL valide pour 5 minutes [^3]
+  const { data, error } = await supabase.storage.from("patient_documents").createSignedUrl(filePath, 60 * 5)
 
   if (error) {
     console.error("Error creating signed URL:", error.message)
@@ -96,17 +104,13 @@ export async function getSignedUrlForDownload(filePath: string): Promise<string 
 export async function deleteDocumentAction(documentId: string, storagePath: string): Promise<void> {
   const supabase = createSupabaseServerClient()
 
-  // 1. Supprimer le fichier du stockage
-  const { error: storageError } = await supabase.storage
-    .from("patient_documents") // Assurez-vous que ce nom de bucket correspond
-    .remove([storagePath])
+  const { error: storageError } = await supabase.storage.from("patient_documents").remove([storagePath])
 
   if (storageError) {
     console.error("Error deleting file from storage:", storageError.message)
     throw new Error(`Failed to delete file from storage: ${storageError.message}`)
   }
 
-  // 2. Supprimer les métadonnées de la base de données
   const { error: dbError, data: documentData } = await supabase
     .from("documents")
     .delete()
@@ -116,8 +120,6 @@ export async function deleteDocumentAction(documentId: string, storagePath: stri
 
   if (dbError) {
     console.error("Error deleting document metadata:", dbError.message)
-    // Potentiellement, si la suppression de la DB échoue mais le fichier a été supprimé,
-    // il faudrait une logique de compensation ou de log.
     throw new Error(`Failed to delete document metadata: ${dbError.message}`)
   }
 
