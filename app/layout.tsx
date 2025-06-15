@@ -7,6 +7,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { UserCircle, LogOut } from "lucide-react"
+import Image from "next/image"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -31,8 +32,14 @@ export default async function RootLayout({
       <body className={inter.className}>
         <header className="border-b">
           <div className="container mx-auto flex h-16 items-center justify-between px-4">
-            <Link href="/" className="font-bold text-xl">
-              Obesity Care Clinic
+            <Link href="/" className="flex items-center">
+              <Image
+                src="/logo-obesity-care-clinic.png"
+                alt="Obesity Care Clinic Logo"
+                width={48}
+                height={48}
+                className="h-12 w-12"
+              />
             </Link>
             <nav className="flex items-center space-x-4">
               {user ? (

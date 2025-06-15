@@ -15,13 +15,13 @@ body {
 @layer base {
   :root {
     --background: 0 0% 100%; /* White */
-    --foreground: 224 71% 4%; /* Dark Blue/Black for text */
+    --foreground: 333 65% 35%; /* Dark Pink for text */
 
     --card: 0 0% 100%; /* White */
-    --card-foreground: 224 71% 4%; /* Dark Blue/Black for text */
+    --card-foreground: 333 65% 35%; /* Dark Pink for text on cards */
 
     --popover: 0 0% 100%; /* White */
-    --popover-foreground: 224 71% 4%; /* Dark Blue/Black for text */
+    --popover-foreground: 333 65% 35%; /* Dark Pink for text on popovers */
 
     --primary: 333 91% 61%; /* Main Pink */
     --primary-foreground: 0 0% 100%; /* White */
@@ -46,7 +46,7 @@ body {
 
     /* Sidebar colors (kept for consistency, adjust if a distinct sidebar is added) */
     --sidebar-background: 0 0% 100%; /* White */
-    --sidebar-foreground: 224 71% 4%; /* Dark Blue/Black */
+    --sidebar-foreground: 333 65% 35%; /* Dark Pink for sidebar text */
     --sidebar-primary: 333 91% 61%; /* Main Pink */
     --sidebar-primary-foreground: 0 0% 100%; /* White */
     --sidebar-accent: 333 91% 96%; /* Very Light Pink */

@@ -1,25 +1,17 @@
 "use server"
 
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { unstable_noStore as noStore } from "next/cache"
 import { revalidatePath } from "next/cache"
-import { unstable_noStore as noStore } from "next/cache" // Assurez-vous que cet import est présent
 
 // Fonction searchPatients restaurée
 export async function searchPatients(query: string) {
   noStore() // Empêche la mise en cache des résultats de recherche
   const supabase = createSupabaseServerClient()
 
-  if (!query) {
-    const { data, error } = await supabase
-      .from("patients")
-      .select("id, full_name")
-      .order("full_name", { ascending: true })
-
-    if (error) {
-      console.error("Error fetching all patients:", error)
-      return []
-    }
-    return data || []
+  // Ne retourne des résultats que si une recherche est effectuée
+  if (!query || query.trim() === "") {
+    return []
   }
 
   const { data, error } = await supabase

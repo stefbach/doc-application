@@ -1,22 +1,19 @@
-// Ceci est la page de LISTE des patients.
-// Le contenu précédent a été déplacé vers [patientId]/documents/page.tsx
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { User, FileText, Search } from "lucide-react"
-import { searchPatients } from "@/app/actions/patient-actions" // Assurez-vous que cette action existe
+import { FileText, SearchIcon, Inbox } from "lucide-react"
+import { searchPatients } from "@/app/actions/patient-actions"
+import { Input } from "@/components/ui/input"
 
-// Interface simple pour un patient dans la liste
 interface PatientListItem {
   id: string
   full_name: string | null
-  // Ajoutez d'autres champs si nécessaire pour la liste, ex: email
 }
 
-export default async function PatientsListPage({
+export default async function PatientsSearchPage({
   searchParams,
 }: {
   searchParams?: { query?: string }
@@ -31,68 +28,80 @@ export default async function PatientsListPage({
   }
 
   const query = searchParams?.query || ""
-  const patients: PatientListItem[] = await searchPatients(query) // Utilise searchPatients
+  const patients: PatientListItem[] = await searchPatients(query)
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center">
-              <User className="mr-2 h-7 w-7" />
-              Liste des Patients
-            </div>
-            {/* Vous pouvez ajouter un bouton "Ajouter Patient" ici plus tard */}
-            {/* <Button asChild><Link href="/dashboard/patients/new">Ajouter Patient</Link></Button> */}
-          </CardTitle>
-          <CardDescription>Recherchez et sélectionnez un patient pour voir ses documents.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {/* Barre de recherche (simple pour l'instant, peut être améliorée) */}
-          <form className="mb-4 flex gap-2">
-            <input
-              type="text"
-              name="query"
-              placeholder="Rechercher par nom..."
-              defaultValue={query}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            />
-            <Button type="submit">
-              <Search className="mr-2 h-4 w-4" /> Rechercher
-            </Button>
-          </form>
+    <div className="flex flex-col items-center justify-start pt-10 min-h-[calc(100vh-10rem)] space-y-8">
+      <div className="w-full max-w-2xl text-center">
+        <h1 className="text-3xl font-bold mb-2 flex items-center justify-center">
+          <SearchIcon className="mr-3 h-8 w-8" />
+          Rechercher un Patient
+        </h1>
+        <p className="text-muted-foreground mb-6">Entrez le nom du patient que vous souhaitez trouver.</p>
+        <form className="flex gap-2 items-center">
+          <Input
+            type="text"
+            name="query"
+            placeholder="Nom du patient..."
+            defaultValue={query}
+            className="flex-grow h-14 text-lg px-4 py-3"
+            aria-label="Rechercher un patient"
+          />
+          <Button type="submit" size="lg" className="h-14 px-6">
+            <SearchIcon className="mr-2 h-5 w-5" /> Rechercher
+          </Button>
+        </form>
+      </div>
 
-          {patients.length === 0 ? (
-            <p className="text-muted-foreground text-center">
-              {query ? `Aucun patient trouvé pour "${query}".` : "Aucun patient à afficher."}
-            </p>
+      {query.trim() !== "" && (
+        <div className="w-full max-w-4xl">
+          {patients.length > 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Résultats de la recherche pour "{query}"</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nom Complet</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {patients.map((patient) => (
+                      <TableRow key={patient.id}>
+                        <TableCell className="font-medium">{patient.full_name || "Nom non défini"}</TableCell>
+                        <TableCell className="text-right">
+                          <Button asChild variant="outline" size="sm">
+                            <Link href={`/dashboard/patients/${patient.id}/documents`}>
+                              <FileText className="mr-2 h-4 w-4" /> Voir Documents
+                            </Link>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nom Complet</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {patients.map((patient) => (
-                  <TableRow key={patient.id}>
-                    <TableCell className="font-medium">{patient.full_name || "Nom non défini"}</TableCell>
-                    <TableCell className="text-right">
-                      <Button asChild variant="outline" size="sm">
-                        <Link href={`/dashboard/patients/${patient.id}/documents`}>
-                          <FileText className="mr-2 h-4 w-4" /> Voir Documents
-                        </Link>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="text-center py-10">
+              <Inbox className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-xl font-semibold">Aucun patient trouvé.</p>
+              <p className="text-muted-foreground">
+                Aucun patient ne correspond à votre recherche pour "{query}". Veuillez essayer un autre nom.
+              </p>
+            </div>
           )}
-          {/* Pagination à ajouter ici si nécessaire */}
-        </CardContent>
-      </Card>
+        </div>
+      )}
+      {query.trim() === "" && (
+        <div className="text-center py-10 mt-8">
+          <SearchIcon className="mx-auto h-16 w-16 text-muted-foreground/50 mb-4" />
+          <p className="text-xl text-muted-foreground">Commencez votre recherche pour afficher les patients.</p>
+        </div>
+      )}
     </div>
   )
 }
