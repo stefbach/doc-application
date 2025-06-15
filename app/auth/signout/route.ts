@@ -1,54 +1,66 @@
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
-import { type NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
 
-export async function GET(req: NextRequest) {
+export const dynamic = "force-dynamic"
+
+// It's a security best practice to use POST for sign-out operations
+// to prevent Cross-Site Request Forgery (CSRF) vulnerabilities.
+export async function POST(request: NextRequest) {
   const cookieStore = cookies()
   const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
 
   try {
-    const { error } = await supabase.auth.signOut()
-    if (error) {
-      console.error("Supabase sign out error (GET):", error.message)
-      // Rediriger vers la page de connexion avec un message d'erreur
-      // Vous pouvez personnaliser l'URL ou la gestion d'erreur ici
-      return NextResponse.redirect(new URL("/login?error=signout_failed", req.url), {
-        status: 302,
-      })
-    }
-  } catch (e: any) {
-    console.error("Catch block error during sign out (GET):", e.message)
-    return NextResponse.redirect(new URL("/login?error=signout_exception", req.url), {
-      status: 302,
-    })
-  }
+    // Check if there's an active session, though signOut works even if not.
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
 
-  // Redirection après une déconnexion réussie
-  return NextResponse.redirect(new URL("/login", req.url), {
-    status: 302,
-  })
+    if (session) {
+      const { error: signOutError } = await supabase.auth.signOut()
+      if (signOutError) {
+        console.error("Supabase sign out error:", signOutError.message)
+        return NextResponse.json({ error: "Failed to sign out.", details: signOutError.message }, { status: 500 })
+      }
+    }
+
+    // Redirect to the home page (or login page) after sign out.
+    // Ensure the URL is absolute for redirects.
+    const redirectUrl = new URL("/", request.url).toString()
+
+    // For POST requests that result in a redirect, 303 See Other is appropriate.
+    // This tells the browser to make a GET request to the new URL.
+    return NextResponse.redirect(redirectUrl, { status: 303 })
+  } catch (error: any) {
+    console.error("Unknown error during sign out process:", error.message, error.stack)
+    return NextResponse.json(
+      { error: "An unexpected error occurred during sign out.", details: error.message },
+      { status: 500 },
+    )
+  }
 }
 
-export async function POST(req: NextRequest) {
-  const cookieStore = cookies()
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+// If you were accessing this route via a GET request (e.g., typing URL in browser or a simple link),
+// that would explain an error if only POST is defined.
+// While POST is recommended, if you need a GET handler, you can add one:
+/*
+export async function GET(request: NextRequest) {
+  const cookieStore = cookies();
+  const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
 
   try {
-    const { error } = await supabase.auth.signOut()
-    if (error) {
-      console.error("Supabase sign out error (POST):", error.message)
-      return NextResponse.redirect(new URL("/login?error=signout_failed", req.url), {
-        status: 302,
-      })
-    }
-  } catch (e: any) {
-    console.error("Catch block error during sign out (POST):", e.message)
-    return NextResponse.redirect(new URL("/login?error=signout_exception", req.url), {
-      status: 302,
-    })
-  }
+    await supabase.auth.signOut();
+    
+    const redirectUrl = new URL('/', request.url).toString();
+    return NextResponse.redirect(redirectUrl, { status: 302 }); // 302 Found for GET redirects
 
-  return NextResponse.redirect(new URL("/login", req.url), {
-    status: 302,
-  })
+  } catch (error: any) {
+    console.error('Unknown error during GET sign out:', error.message, error.stack);
+    return NextResponse.json(
+      { error: 'An unexpected error occurred during sign out.', details: error.message },
+      { status: 500 }
+    );
+  }
 }
+*/
