@@ -47,7 +47,6 @@ const DetailItem = ({
       </Badge>
     )
   } else if (typeof value === "string" && value.length > 100) {
-    // Pour les longs textes
     displayValue = <p className="text-sm whitespace-pre-wrap">{value.substring(0, 100)}...</p>
   } else if (typeof value === "string") {
     displayValue = <p className="text-sm whitespace-pre-wrap">{value}</p>
@@ -168,4 +167,3 @@ export default async function PatientDocumentsPage({ params }: { params: { patie
     </div>
   )
 }
-
