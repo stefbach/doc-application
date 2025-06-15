@@ -128,7 +128,7 @@ export default function PatientDocumentManager({
 
       const fileName = `${userSession.user.id}/${patientId}/${Date.now()}_${file.name}`
       console.log("[handleUpload] Attempting to upload file to Supabase Storage:", fileName)
-      const uploadResponse = await supabase.storage.from("patient_documents").upload(fileName, file)
+      const uploadResponse = await supabase.storage.from("patient-documents").upload(fileName, file) // <-- NOM DU BUCKET CORRIGÉ
 
       const uploadError = uploadResponse.error
       if (uploadError) {
@@ -319,4 +319,3 @@ export default function PatientDocumentManager({
     </div>
   )
 }
-
