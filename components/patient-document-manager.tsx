@@ -173,6 +173,9 @@ export default function PatientDocumentManager({
   }
 
   const handleDownload = async (filePath: string, originalFileName: string) => {
+    console.log(
+      `[handleDownload] Attempting to get signed URL for path: "${filePath}" and original name: "${originalFileName}"`,
+    )
     console.log(`[handleDownload] Attempting to get signed URL for: ${filePath}`)
     try {
       // Appel à l'action serveur
