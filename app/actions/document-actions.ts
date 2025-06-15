@@ -26,7 +26,11 @@ export async function getPatientDetails(patientId: string): Promise<{ id: string
   if (!patientId) return null // Added a guard for empty patientId
   const supabase = createSupabaseServerClient()
   // Corrected 'name' to 'full_name'
-  const { data: patient, error } = await supabase.from("patients").select("id, full_name").eq("id", patientId).single()
+  const { data: patient, error } = await supabase
+    .from("patients")
+    .select("id, full_name")
+    .eq("id", patientId)
+    .maybeSingle()
 
   if (error) {
     console.error(`Error fetching patient details for ID ${patientId}:`, error.message)
