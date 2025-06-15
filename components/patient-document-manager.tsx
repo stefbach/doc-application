@@ -128,20 +128,26 @@ export default function PatientDocumentManager({
 
       const fileName = `${userSession.user.id}/${patientId}/${Date.now()}_${file.name}`
       console.log("[handleUpload] Attempting to upload file to Supabase Storage:", fileName)
-      const uploadResponse = await supabase.storage.from("patient-documents").upload(fileName, file) // <-- NOM DU BUCKET CORRIGÉ
+      const uploadResponse = await supabase.storage.from("patient-documents").upload(fileName, file)
 
       const uploadError = uploadResponse.error
       if (uploadError) {
         console.error("[handleUpload] Supabase storage upload error:", uploadError)
         throw uploadError
       }
-      console.log("[handleUpload] File uploaded to Supabase Storage. Path:", uploadResponse.data?.path)
+
+      // Utiliser le chemin retourné par la réponse de l'upload pour une précision maximale
+      const actualStoragePath = uploadResponse.data?.path
+      if (!actualStoragePath) {
+        throw new Error("Le fichier a été uploadé mais aucun chemin n'a été retourné par le stockage.")
+      }
+      console.log("[handleUpload] File uploaded to Supabase Storage. Path:", actualStoragePath)
 
       console.log("[handleUpload] Attempting to call addDocumentMetadata server action.")
       const newDocumentMetadata = await addDocumentMetadata({
         patient_id: patientId,
         file_name: file.name,
-        storage_path: fileName, // Assurez-vous que c'est bien uploadResponse.data.path si disponible et correct
+        storage_path: actualStoragePath, // Utiliser le chemin de la réponse
         file_type: file.type,
         file_size: file.size,
         document_category: documentCategory,
@@ -176,7 +182,6 @@ export default function PatientDocumentManager({
     console.log(
       `[handleDownload] Attempting to get signed URL for path: "${filePath}" and original name: "${originalFileName}"`,
     )
-    console.log(`[handleDownload] Attempting to get signed URL for: ${filePath}`)
     try {
       // Appel à l'action serveur
       const url = await getSignedUrlForDownload(filePath)
@@ -322,3 +327,4 @@ export default function PatientDocumentManager({
     </div>
   )
 }
+
