@@ -13,7 +13,7 @@ export default async function HomePage() {
     // Redirige vers un tableau de bord ou une page de liste de patients
     // Pour cet exemple, on va vers une page de patient spécifique (ID à remplacer)
     // Idéalement, vous auriez une page listant les patients ou un dashboard.
-    redirect(`/dashboard/patients/0e518519-75ea-4b55-941f-6afdd88f8a48/documents`) // Remplacez par un ID de patient valide
+    redirect(`/dashboard/patients`) // Remplacez par un ID de patient valide
   }
 
   return (
