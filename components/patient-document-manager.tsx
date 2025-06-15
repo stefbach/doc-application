@@ -9,8 +9,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
-import { UploadCloud, FileText, Download, Trash2, Loader2 } from "lucide-react"
+import { UploadCloud, Download, Trash2, Loader2, FolderKanban } from "lucide-react" // Ajout de FolderKanban
 import {
   addDocumentMetadata,
   getSignedUrlForDownload,
@@ -25,6 +26,17 @@ interface PatientDocumentManagerProps {
   patientName: string
 }
 
+const documentCategories = [
+  "Facture",
+  "Contrat",
+  "Simulation Financière",
+  "Compte Rendu Hospitalisation",
+  "Compte Rendu Consultation",
+  "Lettre GP",
+  "Formulaire S2",
+  "Autre",
+]
+
 export default function PatientDocumentManager({
   patientId,
   initialDocuments,
@@ -32,6 +44,7 @@ export default function PatientDocumentManager({
 }: PatientDocumentManagerProps) {
   const [documents, setDocuments] = useState<DocumentType[]>(initialDocuments)
   const [file, setFile] = useState<File | null>(null)
+  const [documentCategory, setDocumentCategory] = useState<string>("")
   const [uploading, setUploading] = useState(false)
   const [deletingDocId, setDeletingDocId] = useState<string | null>(null)
 
@@ -61,6 +74,14 @@ export default function PatientDocumentManager({
       })
       return
     }
+    if (!documentCategory) {
+      toast({
+        title: "Aucune catégorie sélectionnée",
+        description: "Veuillez choisir une catégorie pour le document.",
+        variant: "destructive",
+      })
+      return
+    }
     if (!patientId) {
       toast({
         title: "ID Patient manquant",
@@ -80,9 +101,7 @@ export default function PatientDocumentManager({
       }
 
       const fileName = `${userSession.user.id}/${patientId}/${Date.now()}_${file.name}`
-      const uploadResponse = await supabase.storage
-        .from("patient_documents") // Assurez-vous que ce nom de bucket correspond à votre configuration Supabase
-        .upload(fileName, file)
+      const uploadResponse = await supabase.storage.from("patient_documents").upload(fileName, file)
 
       const uploadError = uploadResponse.error
       if (uploadError) throw uploadError
@@ -93,15 +112,18 @@ export default function PatientDocumentManager({
         storage_path: fileName,
         file_type: file.type,
         file_size: file.size,
+        document_category: documentCategory,
       })
 
       if (newDocumentMetadata) {
         setDocuments((prevDocs) => [...prevDocs, newDocumentMetadata])
         toast({ title: "Upload réussi!", description: `Le fichier ${file.name} a été uploadé.` })
         setFile(null)
-        // Reset file input if possible or clear its visual state
+        setDocumentCategory("")
         const fileInput = document.getElementById("file-upload") as HTMLInputElement
         if (fileInput) fileInput.value = ""
+        // Réinitialiser le Select visuellement si possible (shadcn/ui Select ne se réinitialise pas facilement comme ça)
+        // Pour l'instant, on se contente de réinitialiser l'état `documentCategory`
       } else {
         toast({
           title: "Erreur de métadonnées",
@@ -120,10 +142,9 @@ export default function PatientDocumentManager({
     try {
       const url = await getSignedUrlForDownload(filePath)
       if (url) {
-        // Créer un lien temporaire pour déclencher le téléchargement avec le nom original
         const link = document.createElement("a")
         link.href = url
-        link.setAttribute("download", originalFileName) // Suggère le nom original du fichier
+        link.setAttribute("download", originalFileName)
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
@@ -161,16 +182,33 @@ export default function PatientDocumentManager({
           <CardTitle className="flex items-center">
             <UploadCloud className="mr-2 h-5 w-5" /> Uploader un nouveau document
           </CardTitle>
-          <CardDescription>Sélectionnez un fichier à associer à {patientName}.</CardDescription>
+          <CardDescription>Sélectionnez un fichier et sa catégorie pour l'associer à {patientName}.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleUpload} className="space-y-4">
-            <div>
-              <Label htmlFor="file-upload">Choisir un fichier</Label>
-              <Input id="file-upload" type="file" onChange={handleFileChange} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="file-upload">Choisir un fichier</Label>
+                <Input id="file-upload" type="file" onChange={handleFileChange} />
+              </div>
+              <div>
+                <Label htmlFor="doc-category">Catégorie du document</Label>
+                <Select onValueChange={setDocumentCategory} value={documentCategory}>
+                  <SelectTrigger id="doc-category">
+                    <SelectValue placeholder="Sélectionner une catégorie..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {documentCategories.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             {file && <p className="text-sm text-muted-foreground">Fichier sélectionné: {file.name}</p>}
-            <Button type="submit" disabled={uploading || !file}>
+            <Button type="submit" disabled={uploading || !file || !documentCategory}>
               {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UploadCloud className="mr-2 h-4 w-4" />}
               Uploader
             </Button>
@@ -181,19 +219,19 @@ export default function PatientDocumentManager({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <FileText className="mr-2 h-5 w-5" /> Documents existants
+            <FolderKanban className="mr-2 h-5 w-5" /> Documents Uploadés
           </CardTitle>
-          <CardDescription>Liste des documents pour {patientName}.</CardDescription>
+          <CardDescription>Liste des fichiers uploadés pour {patientName}.</CardDescription>
         </CardHeader>
         <CardContent>
           {documents.length === 0 ? (
-            <p className="text-muted-foreground">Aucun document trouvé pour ce patient.</p>
+            <p className="text-muted-foreground">Aucun document uploadé trouvé pour ce patient.</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Nom du fichier</TableHead>
-                  <TableHead>Type</TableHead>
+                  <TableHead>Catégorie</TableHead>
                   <TableHead>Taille</TableHead>
                   <TableHead>Uploadé le</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -203,7 +241,7 @@ export default function PatientDocumentManager({
                 {documents.map((doc) => (
                   <TableRow key={doc.id}>
                     <TableCell className="font-medium">{doc.file_name}</TableCell>
-                    <TableCell>{doc.file_type || "N/A"}</TableCell>
+                    <TableCell>{doc.document_category || "N/A"}</TableCell>
                     <TableCell>{doc.file_size ? (doc.file_size / 1024).toFixed(2) + " KB" : "N/A"}</TableCell>
                     <TableCell>{new Date(doc.uploaded_at).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right space-x-2">
@@ -238,3 +276,4 @@ export default function PatientDocumentManager({
     </div>
   )
 }
+
