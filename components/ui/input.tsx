@@ -5,6 +5,13 @@ import { cn } from "@/lib/utils"
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, type, ...props }, ref) => {
+  const { children, ...restProps } = props as any // Explicitly pull out children
+
+  // Optional: Log if children are unexpectedly received by the Input component
+  if (children !== undefined && children !== null) {
+    console.warn("Shadcn Input component received unexpected children prop:", children)
+  }
+
   return (
     <input
       type={type}
@@ -13,7 +20,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, type,
         className,
       )}
       ref={ref}
-      {...props}
+      {...restProps} // Spread only the rest of the props, excluding children
     />
   )
 })
