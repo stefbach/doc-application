@@ -93,10 +93,28 @@ export default function PatientDocumentManager({
 
     setUploading(true)
     try {
-      const { data: userSession } = await supabase.auth.getUser()
-      if (!userSession?.user) {
-        toast({ title: "Non authentifié", description: "Veuillez vous connecter.", variant: "destructive" })
+      const { data: userSession, error: getUserError } = await supabase.auth.getUser()
+
+      if (getUserError) {
+        console.error("Error fetching user session:", getUserError)
+        toast({
+          title: "Erreur d'authentification",
+          description: `Impossible de vérifier l'utilisateur: ${getUserError.message}. Veuillez vous reconnecter.`,
+          variant: "destructive",
+        })
         router.push("/login")
+        setUploading(false) // Reset uploading state
+        return
+      }
+
+      if (!userSession?.user) {
+        toast({
+          title: "Non authentifié",
+          description: "Veuillez vous connecter pour uploader des documents.",
+          variant: "destructive",
+        })
+        router.push("/login")
+        setUploading(false) // Reset uploading state
         return
       }
 
@@ -276,4 +294,3 @@ export default function PatientDocumentManager({
     </div>
   )
 }
-
