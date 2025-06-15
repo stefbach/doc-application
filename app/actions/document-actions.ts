@@ -119,26 +119,49 @@ export async function getSignedUrlForDownload(filePath: string): Promise<string 
 export async function deleteDocumentAction(documentId: string, storagePath: string): Promise<void> {
   const supabase = createSupabaseServerClient()
 
-  const { error: storageError } = await supabase.storage.from("patient_documents").remove([storagePath])
-
-  if (storageError) {
-    console.error("Error deleting file from storage:", storageError.message)
-    throw new Error(`Failed to delete file from storage: ${storageError.message}`)
-  }
-
-  const { error: dbError, data: documentData } = await supabase
+  // 1. Récupérer le patient_id avant de supprimer les métadonnées du document
+  let patientIdToRevalidate: string | null = null
+  const { data: documentToDelete, error: fetchError } = await supabase
     .from("documents")
-    .delete()
-    .eq("id", documentId)
     .select("patient_id")
+    .eq("id", documentId)
     .single()
 
-  if (dbError) {
-    console.error("Error deleting document metadata:", dbError.message)
-    throw new Error(`Failed to delete document metadata: ${dbError.message}`)
+  if (fetchError) {
+    console.error("Erreur lors de la récupération du document avant suppression:", fetchError.message)
+    // Vous pourriez vouloir lever une erreur ici ou tenter la suppression quand même.
+    // Pour l'instant, nous allons logger et continuer avec prudence.
+    // Si le document n'est pas trouvé, la suppression échouera de toute façon ou ne fera rien.
+  } else if (documentToDelete) {
+    patientIdToRevalidate = documentToDelete.patient_id
   }
 
-  if (documentData?.patient_id) {
-    revalidatePath(`/dashboard/patients/${documentData.patient_id}/documents`)
+  // 2. Supprimer le fichier du stockage
+  const { error: storageError } = await supabase.storage.from("patient-documents").remove([storagePath])
+
+  if (storageError) {
+    console.error("Erreur lors de la suppression du fichier du stockage:", storageError.message)
+    // Si la suppression du stockage échoue, nous pourrions ne pas vouloir supprimer l'enregistrement de la BDD,
+    // ou gérer cela comme un échec partiel.
+    throw new Error(`Échec de la suppression du fichier du stockage: ${storageError.message}`)
+  }
+
+  // 3. Supprimer les métadonnées du document de la base de données
+  const { error: dbError } = await supabase.from("documents").delete().eq("id", documentId)
+  // Pas de .select().single() ici après la suppression
+
+  if (dbError) {
+    console.error("Erreur lors de la suppression des métadonnées du document:", dbError.message)
+    throw new Error(`Échec de la suppression des métadonnées du document: ${dbError.message}`)
+  }
+
+  // 4. Revalider le chemin si nous avons un patient_id
+  if (patientIdToRevalidate) {
+    revalidatePath(`/dashboard/patients/${patientIdToRevalidate}/documents`)
+  } else {
+    // Revalidation de secours si patient_id n'a pas pu être récupéré.
+    // Cela pourrait être moins spécifique, par ex. revalider la liste de tous les patients.
+    // Pour l'instant, nous ne revaliderons que si nous avons le patient_id spécifique.
+    console.warn(`Impossible de déterminer le patient_id pour le document ${documentId} afin de revalider le chemin.`)
   }
 }
