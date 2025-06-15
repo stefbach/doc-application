@@ -1,9 +1,10 @@
 "use client"
 
-import React from "react"
+import type React from "react" // Keep React import if used for other JSX needs
 
 import { useState, useEffect, type FormEvent } from "react"
-import { createSupabaseBrowserClient } from "@/lib/supabase/client"
+// Adjusted import: remove createSupabaseBrowserClient if it's no longer exported or needed directly
+import { getSingletonSupabaseBrowserClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -48,7 +49,9 @@ export default function PatientDocumentManager({
   const [uploading, setUploading] = useState(false)
   const [deletingDocId, setDeletingDocId] = useState<string | null>(null)
 
-  const supabase = React.useMemo(() => createSupabaseBrowserClient(), [])
+  // Use the singleton client. No React.useMemo needed here for the client instance itself,
+  // as the getSingletonSupabaseBrowserClient function handles the singleton logic.
+  const supabase = getSingletonSupabaseBrowserClient()
   const { toast } = useToast()
   const router = useRouter()
 
@@ -66,7 +69,6 @@ export default function PatientDocumentManager({
 
   const handleUpload = async (e: FormEvent) => {
     e.preventDefault()
-    // ... (vérifications initiales pour file, documentCategory, patientId)
     if (!file) {
       toast({
         title: "Aucun fichier sélectionné",
@@ -99,9 +101,6 @@ export default function PatientDocumentManager({
 
       if (getUserError) {
         console.error("[handleUpload] Error fetching user session:", getUserError)
-        console.error("[handleUpload] getUserError Name:", getUserError.name)
-        console.error("[handleUpload] getUserError Message:", getUserError.message)
-        console.error("[handleUpload] getUserError Stack:", getUserError.stack)
         toast({
           title: "Erreur d'authentification",
           description: `Impossible de vérifier l'utilisateur: ${getUserError.message}. Veuillez vous reconnecter.`,
@@ -136,18 +135,16 @@ export default function PatientDocumentManager({
         throw uploadError
       }
 
-      // Utiliser le chemin retourné par la réponse de l'upload pour une précision maximale
       const actualStoragePath = uploadResponse.data?.path
       if (!actualStoragePath) {
         throw new Error("Le fichier a été uploadé mais aucun chemin n'a été retourné par le stockage.")
       }
       console.log("[handleUpload] File uploaded to Supabase Storage. Path:", actualStoragePath)
 
-      console.log("[handleUpload] Attempting to call addDocumentMetadata server action.")
       const newDocumentMetadata = await addDocumentMetadata({
         patient_id: patientId,
         file_name: file.name,
-        storage_path: actualStoragePath, // Utiliser le chemin de la réponse
+        storage_path: actualStoragePath,
         file_type: file.type,
         file_size: file.size,
         document_category: documentCategory,
@@ -183,14 +180,13 @@ export default function PatientDocumentManager({
       `[handleDownload] Attempting to get signed URL for path: "${filePath}" and original name: "${originalFileName}"`,
     )
     try {
-      // Appel à l'action serveur
       const url = await getSignedUrlForDownload(filePath)
       console.log(`[handleDownload] Signed URL received from server action: ${url ? "URL_VALID" : "URL_NULL_OR_EMPTY"}`)
 
       if (url) {
         const link = document.createElement("a")
         link.href = url
-        link.setAttribute("download", originalFileName) // Utilise le nom de fichier original
+        link.setAttribute("download", originalFileName)
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
@@ -199,7 +195,8 @@ export default function PatientDocumentManager({
         console.error("[handleDownload] getSignedUrlForDownload returned null or empty URL.")
         toast({
           title: "Erreur de téléchargement",
-          description: "Impossible d'obtenir l'URL de téléchargement depuis le serveur.",
+          description:
+            "Impossible d'obtenir l'URL de téléchargement depuis le serveur. Vérifiez que le chemin du fichier est correct.",
           variant: "destructive",
         })
       }
@@ -327,4 +324,3 @@ export default function PatientDocumentManager({
     </div>
   )
 }
-
