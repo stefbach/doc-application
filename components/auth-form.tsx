@@ -1,6 +1,6 @@
 "use client"
 
-import type React from "react"
+import React from "react"
 
 import { useState } from "react"
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
@@ -18,7 +18,7 @@ export default function AuthForm() {
   const [isSignUp, setIsSignUp] = useState(false)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const supabase = createSupabaseBrowserClient()
+  const supabase = React.useMemo(() => createSupabaseBrowserClient(), [])
   const { toast } = useToast()
 
   const handleAuth = async (e: React.FormEvent<HTMLFormElement>) => {

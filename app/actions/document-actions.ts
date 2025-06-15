@@ -22,15 +22,17 @@ interface NewDocumentMetadata {
   file_size?: number
 }
 
-export async function getPatientDetails(patientId: string): Promise<{ id: string; name: string | null } | null> {
+export async function getPatientDetails(patientId: string): Promise<{ id: string; full_name: string | null } | null> {
+  if (!patientId) return null // Added a guard for empty patientId
   const supabase = createSupabaseServerClient()
-  const { data: patient, error } = await supabase.from("patients").select("id, name").eq("id", patientId).single()
+  // Corrected 'name' to 'full_name'
+  const { data: patient, error } = await supabase.from("patients").select("id, full_name").eq("id", patientId).single()
 
   if (error) {
-    console.error("Error fetching patient details:", error.message)
+    console.error(`Error fetching patient details for ID ${patientId}:`, error.message)
     return null
   }
-  return patient
+  return patient as { id: string; full_name: string | null } // Ensure correct type casting
 }
 
 export async function getDocumentsForPatient(patientId: string): Promise<DocumentType[]> {

@@ -44,13 +44,13 @@ export default async function PatientDocumentsPage({ params }: { params: { patie
   return (
     <div>
       <h1 className="text-2xl font-bold mb-2">
-        Documents pour {patientDetails.name || `Patient ${patientId.substring(0, 8)}...`}
+        Documents pour {patientDetails.full_name || `Patient ${patientId.substring(0, 8)}...`}
       </h1>
       <p className="text-muted-foreground mb-6">Gérez les documents associés à ce patient.</p>
       <PatientDocumentManager
         patientId={patientId}
         initialDocuments={initialDocuments}
-        patientName={patientDetails.name || `Patient ${patientId.substring(0, 8)}...`}
+        patientName={patientDetails.full_name || `Patient ${patientId.substring(0, 8)}...`}
       />
     </div>
   )

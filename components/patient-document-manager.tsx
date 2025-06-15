@@ -1,6 +1,6 @@
 "use client"
 
-import type React from "react"
+import React from "react"
 
 import { useState, useEffect, type FormEvent } from "react"
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
@@ -35,7 +35,7 @@ export default function PatientDocumentManager({
   const [uploading, setUploading] = useState(false)
   const [deletingDocId, setDeletingDocId] = useState<string | null>(null)
 
-  const supabase = createSupabaseBrowserClient()
+  const supabase = React.useMemo(() => createSupabaseBrowserClient(), [])
   const { toast } = useToast()
   const router = useRouter()
 
