@@ -21,7 +21,7 @@ interface NewDocumentMetadata {
   storage_path: string
   file_type?: string
   file_size?: number
-  document_category: string
+  document_category: string // Important: this is the category selected during upload
 }
 
 export interface PatientDetailsType {
@@ -32,7 +32,6 @@ export interface PatientDetailsType {
   poids: number | null
   taille: number | null
   bmi: number | null
-  // Ajout des champs spécifiques aux documents de la table patients
   facture_envoye: boolean | null
   medical_agrement: boolean | null
   consent_form: boolean | null
@@ -40,7 +39,6 @@ export interface PatientDetailsType {
   compte_rendu_consultation: string | null
   patient_s2_form: string | null
   lettre_gp: string | null
-  // Ajoutez d'autres champs de la table 'patients' que vous voulez afficher ici
 }
 
 export async function getPatientDetails(patientId: string): Promise<PatientDetailsType | null> {
@@ -54,7 +52,7 @@ export async function getPatientDetails(patientId: string): Promise<PatientDetai
   facture_envoye, medical_agrement, consent_form,
   compte_rendu_hospitalisation, compte_rendu_consultation,
   patient_s2_form, lettre_gp
-`) // Ajout des nouvelles colonnes ici
+`)
     .eq("id", patientId)
     .maybeSingle()
 
@@ -80,6 +78,20 @@ export async function getDocumentsForPatient(patientId: string): Promise<Documen
   return data as DocumentType[]
 }
 
+// Mappage des catégories de documents aux colonnes de la table 'patients'
+// Clé: Catégorie du document (exactement comme dans votre liste déroulante `documentCategories`)
+// Valeur: Nom de la colonne booléenne dans la table 'patients'
+const categoryToPatientColumnMap: {
+  [key: string]: keyof Pick<PatientDetailsType, "facture_envoye" | "medical_agrement" | "consent_form">
+} = {
+  Facture: "facture_envoye",
+  Contrat: "medical_agrement", // À vérifier: "Contrat" correspond-il bien à `medical_agrement`?
+  // Ou peut-être une catégorie "Accord Médical" ou "Consentement" ?
+  // Exemple pour consent_form (si vous avez une catégorie "Consentement" ou similaire):
+  // "Consentement": "consent_form",
+  // Ajoutez d'autres mappages ici si nécessaire
+}
+
 export async function addDocumentMetadata(metadata: NewDocumentMetadata): Promise<DocumentType | null> {
   const supabase = createSupabaseServerClient()
   const {
@@ -90,7 +102,7 @@ export async function addDocumentMetadata(metadata: NewDocumentMetadata): Promis
     throw new Error("User not authenticated")
   }
 
-  const { data, error } = await supabase
+  const { data: newDocument, error } = await supabase
     .from("documents")
     .insert([{ ...metadata, user_id: user.id }])
     .select()
@@ -100,29 +112,55 @@ export async function addDocumentMetadata(metadata: NewDocumentMetadata): Promis
     console.error("Error adding document metadata:", error.message)
     throw new Error(`Failed to add document metadata: ${error.message}`)
   }
+
+  // Si un nouveau document a été ajouté avec succès, vérifions sa catégorie
+  // et mettons à jour la table 'patients' si nécessaire.
+  if (newDocument && metadata.document_category) {
+    const patientColumnToUpdate = categoryToPatientColumnMap[metadata.document_category]
+
+    if (patientColumnToUpdate) {
+      console.log(
+        `Updating patient ${metadata.patient_id}, setting ${patientColumnToUpdate} to true due to upload of ${metadata.document_category}`,
+      )
+      const { error: updatePatientError } = await supabase
+        .from("patients")
+        .update({ [patientColumnToUpdate]: true })
+        .eq("id", metadata.patient_id)
+
+      if (updatePatientError) {
+        // Log l'erreur mais ne bloque pas le processus, car les métadonnées du document sont déjà sauvegardées.
+        console.error(
+          `Failed to update patient table for category "${metadata.document_category}" on patient ${metadata.patient_id}:`,
+          updatePatientError.message,
+        )
+      } else {
+        console.log(
+          `Patient table updated successfully for category "${metadata.document_category}" on patient ${metadata.patient_id}.`,
+        )
+      }
+    }
+  }
+
+  // Revalidate le chemin pour mettre à jour la liste des documents ET les détails du patient affichés.
   revalidatePath(`/dashboard/patients/${metadata.patient_id}/documents`)
-  return data as DocumentType
+  return newDocument as DocumentType
 }
 
 export async function getSignedUrlForDownload(filePath: string): Promise<string | null> {
   console.log(`[getSignedUrlForDownload] Received filePath: "${filePath}"`)
   const supabase = createSupabaseServerClient()
-  const { data, error } = await supabase.storage
-    .from("patient-documents") // CORRECTED: Use hyphenated name "patient-documents"
-    .createSignedUrl(filePath, 60 * 5) // 5 minutes expiry
+  const { data, error } = await supabase.storage.from("patient-documents").createSignedUrl(filePath, 60 * 5)
 
   if (error) {
-    console.error("Error creating signed URL for patient-documents:", error.message) // Updated log message for clarity
+    console.error("Error creating signed URL for patient-documents:", error.message)
     return null
   }
-  console.log("[getSignedUrlForDownload] Signed URL created successfully for patient-documents.") // Added success log
+  console.log("[getSignedUrlForDownload] Signed URL created successfully for patient-documents.")
   return data.signedUrl
 }
 
 export async function deleteDocumentAction(documentId: string, storagePath: string): Promise<void> {
   const supabase = createSupabaseServerClient()
-
-  // 1. Récupérer le patient_id avant de supprimer les métadonnées du document
   let patientIdToRevalidate: string | null = null
   const { data: documentToDelete, error: fetchError } = await supabase
     .from("documents")
@@ -132,39 +170,27 @@ export async function deleteDocumentAction(documentId: string, storagePath: stri
 
   if (fetchError) {
     console.error("Erreur lors de la récupération du document avant suppression:", fetchError.message)
-    // Vous pourriez vouloir lever une erreur ici ou tenter la suppression quand même.
-    // Pour l'instant, nous allons logger et continuer avec prudence.
-    // Si le document n'est pas trouvé, la suppression échouera de toute façon ou ne fera rien.
   } else if (documentToDelete) {
     patientIdToRevalidate = documentToDelete.patient_id
   }
 
-  // 2. Supprimer le fichier du stockage
   const { error: storageError } = await supabase.storage.from("patient-documents").remove([storagePath])
-
   if (storageError) {
     console.error("Erreur lors de la suppression du fichier du stockage:", storageError.message)
-    // Si la suppression du stockage échoue, nous pourrions ne pas vouloir supprimer l'enregistrement de la BDD,
-    // ou gérer cela comme un échec partiel.
     throw new Error(`Échec de la suppression du fichier du stockage: ${storageError.message}`)
   }
 
-  // 3. Supprimer les métadonnées du document de la base de données
   const { error: dbError } = await supabase.from("documents").delete().eq("id", documentId)
-  // Pas de .select().single() ici après la suppression
-
   if (dbError) {
     console.error("Erreur lors de la suppression des métadonnées du document:", dbError.message)
     throw new Error(`Échec de la suppression des métadonnées du document: ${dbError.message}`)
   }
 
-  // 4. Revalider le chemin si nous avons un patient_id
   if (patientIdToRevalidate) {
     revalidatePath(`/dashboard/patients/${patientIdToRevalidate}/documents`)
+    // TODO: Potentially add logic here to set patient flags to false if ALL documents of a certain category are deleted.
+    // This is more complex and depends on requirements.
   } else {
-    // Revalidation de secours si patient_id n'a pas pu être récupéré.
-    // Cela pourrait être moins spécifique, par ex. revalider la liste de tous les patients.
-    // Pour l'instant, nous ne revaliderons que si nous avons le patient_id spécifique.
     console.warn(`Impossible de déterminer le patient_id pour le document ${documentId} afin de revalider le chemin.`)
   }
 }
