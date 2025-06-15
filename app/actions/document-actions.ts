@@ -50,11 +50,11 @@ export async function getPatientDetails(patientId: string): Promise<PatientDetai
   const { data: patient, error } = await supabase
     .from("patients")
     .select(`
-      id, full_name, email, phone, poids, taille, bmi,
-      facture_envoye, medical_agrement, consent_form,
-      compte_rendu_hospitalisation, compte_rendu_consultation,
-      patient_s2_form, lettre_gp
-    `) // Ajout des nouvelles colonnes ici
+    id, full_name, email, phone, poids, taille, bmi,
+    facture_envoye, medical_agrement, consent_form,
+    compte_rendu_hospitalisation, compte_rendu_consultation,
+    patient_s2_form, lettre_gp
+  `) // Ajout des nouvelles colonnes ici
     .eq("id", patientId)
     .maybeSingle()
 
@@ -105,6 +105,7 @@ export async function addDocumentMetadata(metadata: NewDocumentMetadata): Promis
 }
 
 export async function getSignedUrlForDownload(filePath: string): Promise<string | null> {
+  console.log(`[getSignedUrlForDownload] Received filePath: "${filePath}"`)
   const supabase = createSupabaseServerClient()
   const { data, error } = await supabase.storage.from("patient_documents").createSignedUrl(filePath, 60 * 5)
 
