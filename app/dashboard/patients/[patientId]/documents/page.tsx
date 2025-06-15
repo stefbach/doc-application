@@ -3,9 +3,21 @@ import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import PatientDocumentManager from "@/components/patient-document-manager"
 import { getDocumentsForPatient, getPatientDetails, type PatientDetailsType } from "@/app/actions/document-actions" // Importez PatientDetailsType
-import { AlertTriangle, UserCircle, Mail, Phone, MapPin, Scale, TrendingUp, FileTextIcon } from "lucide-react"
+import {
+  AlertTriangle,
+  UserCircle,
+  Mail,
+  Phone,
+  MapPin,
+  Scale,
+  TrendingUp,
+  FileTextIcon,
+  ArrowLeft,
+} from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 // Helper pour afficher une information si elle existe
 const DetailItem = ({
@@ -61,6 +73,17 @@ export default async function PatientDocumentsPage({ params }: { params: { patie
 
   return (
     <div className="space-y-6">
+      <div className="mb-6">
+        {" "}
+        {/* Ajout d'un conteneur avec marge en bas */}
+        <Button asChild variant="outline" size="sm">
+          <Link href="/dashboard/patients">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Retour à la recherche des patients
+          </Link>
+        </Button>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
