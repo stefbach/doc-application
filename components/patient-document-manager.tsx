@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
-import { UploadCloud, Download, Trash2, Loader2, FolderKanban } from "lucide-react" // Ajout de FolderKanban
+import { UploadCloud, Download, Trash2, Loader2, FolderKanban } from "lucide-react"
 import {
   addDocumentMetadata,
   getSignedUrlForDownload,
@@ -66,6 +66,7 @@ export default function PatientDocumentManager({
 
   const handleUpload = async (e: FormEvent) => {
     e.preventDefault()
+    // ... (vérifications initiales pour file, documentCategory, patientId)
     if (!file) {
       toast({
         title: "Aucun fichier sélectionné",
@@ -92,46 +93,60 @@ export default function PatientDocumentManager({
     }
 
     setUploading(true)
+    console.log("[handleUpload] Attempting to get user session...")
     try {
       const { data: userSession, error: getUserError } = await supabase.auth.getUser()
 
       if (getUserError) {
-        console.error("Error fetching user session:", getUserError)
+        console.error("[handleUpload] Error fetching user session:", getUserError)
+        console.error("[handleUpload] getUserError Name:", getUserError.name)
+        console.error("[handleUpload] getUserError Message:", getUserError.message)
+        console.error("[handleUpload] getUserError Stack:", getUserError.stack)
         toast({
           title: "Erreur d'authentification",
           description: `Impossible de vérifier l'utilisateur: ${getUserError.message}. Veuillez vous reconnecter.`,
           variant: "destructive",
         })
         router.push("/login")
-        setUploading(false) // Reset uploading state
+        setUploading(false)
         return
       }
+      console.log("[handleUpload] User session fetched successfully:", userSession)
 
       if (!userSession?.user) {
+        console.warn("[handleUpload] No active user session found after successful fetch.")
         toast({
           title: "Non authentifié",
           description: "Veuillez vous connecter pour uploader des documents.",
           variant: "destructive",
         })
         router.push("/login")
-        setUploading(false) // Reset uploading state
+        setUploading(false)
         return
       }
+      console.log("[handleUpload] User authenticated:", userSession.user.id)
 
       const fileName = `${userSession.user.id}/${patientId}/${Date.now()}_${file.name}`
+      console.log("[handleUpload] Attempting to upload file to Supabase Storage:", fileName)
       const uploadResponse = await supabase.storage.from("patient_documents").upload(fileName, file)
 
       const uploadError = uploadResponse.error
-      if (uploadError) throw uploadError
+      if (uploadError) {
+        console.error("[handleUpload] Supabase storage upload error:", uploadError)
+        throw uploadError
+      }
+      console.log("[handleUpload] File uploaded to Supabase Storage. Path:", uploadResponse.data?.path)
 
+      console.log("[handleUpload] Attempting to call addDocumentMetadata server action.")
       const newDocumentMetadata = await addDocumentMetadata({
         patient_id: patientId,
         file_name: file.name,
-        storage_path: fileName,
+        storage_path: fileName, // Assurez-vous que c'est bien uploadResponse.data.path si disponible et correct
         file_type: file.type,
         file_size: file.size,
         document_category: documentCategory,
       })
+      console.log("[handleUpload] addDocumentMetadata server action response:", newDocumentMetadata)
 
       if (newDocumentMetadata) {
         setDocuments((prevDocs) => [...prevDocs, newDocumentMetadata])
@@ -140,9 +155,8 @@ export default function PatientDocumentManager({
         setDocumentCategory("")
         const fileInput = document.getElementById("file-upload") as HTMLInputElement
         if (fileInput) fileInput.value = ""
-        // Réinitialiser le Select visuellement si possible (shadcn/ui Select ne se réinitialise pas facilement comme ça)
-        // Pour l'instant, on se contente de réinitialiser l'état `documentCategory`
       } else {
+        console.error("[handleUpload] addDocumentMetadata returned null or undefined.")
         toast({
           title: "Erreur de métadonnées",
           description: "Le fichier a été uploadé mais les métadonnées n'ont pas pu être sauvegardées.",
@@ -150,31 +164,39 @@ export default function PatientDocumentManager({
         })
       }
     } catch (error: any) {
+      console.error("[handleUpload] Catch block error:", error)
       toast({ title: "Erreur d'upload", description: error.message, variant: "destructive" })
     } finally {
       setUploading(false)
+      console.log("[handleUpload] Upload process finished.")
     }
   }
 
   const handleDownload = async (filePath: string, originalFileName: string) => {
+    console.log(`[handleDownload] Attempting to get signed URL for: ${filePath}`)
     try {
+      // Appel à l'action serveur
       const url = await getSignedUrlForDownload(filePath)
+      console.log(`[handleDownload] Signed URL received from server action: ${url ? "URL_VALID" : "URL_NULL_OR_EMPTY"}`)
+
       if (url) {
         const link = document.createElement("a")
         link.href = url
-        link.setAttribute("download", originalFileName)
+        link.setAttribute("download", originalFileName) // Utilise le nom de fichier original
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
         toast({ title: "Téléchargement initié", description: `Téléchargement de ${originalFileName} en cours.` })
       } else {
+        console.error("[handleDownload] getSignedUrlForDownload returned null or empty URL.")
         toast({
           title: "Erreur de téléchargement",
-          description: "Impossible d'obtenir l'URL de téléchargement.",
+          description: "Impossible d'obtenir l'URL de téléchargement depuis le serveur.",
           variant: "destructive",
         })
       }
     } catch (error: any) {
+      console.error("[handleDownload] Catch block error:", error)
       toast({ title: "Erreur de téléchargement", description: error.message, variant: "destructive" })
     }
   }
@@ -182,11 +204,14 @@ export default function PatientDocumentManager({
   const handleDelete = async (documentId: string, storagePath: string) => {
     if (!confirm("Êtes-vous sûr de vouloir supprimer ce document? Cette action est irréversible.")) return
     setDeletingDocId(documentId)
+    console.log(`[handleDelete] Attempting to delete document ID: ${documentId}, path: ${storagePath}`)
     try {
       await deleteDocumentAction(documentId, storagePath)
+      console.log(`[handleDelete] deleteDocumentAction successful for ID: ${documentId}`)
       setDocuments(documents.filter((doc) => doc.id !== documentId))
       toast({ title: "Document supprimé", description: "Le document a été supprimé avec succès." })
     } catch (error: any) {
+      console.error(`[handleDelete] Error deleting document ID: ${documentId}:`, error)
       toast({ title: "Erreur de suppression", description: error.message, variant: "destructive" })
     } finally {
       setDeletingDocId(null)
@@ -294,3 +319,4 @@ export default function PatientDocumentManager({
     </div>
   )
 }
+
