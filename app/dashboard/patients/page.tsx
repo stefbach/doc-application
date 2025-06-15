@@ -38,7 +38,7 @@ const DetailItem = ({
   let displayValue: React.ReactNode = value as React.ReactNode
   if (isBoolean) {
     displayValue = value ? (
-      <Badge variant="default" className="bg-green-500 hover:bg-green-600">
+      <Badge variant="default" className="bg-green-500 hover:bg-green-600 text-white">
         <CheckCircle className="mr-1 h-3 w-3" /> Oui
       </Badge>
     ) : (
@@ -56,8 +56,8 @@ const DetailItem = ({
   return (
     <div className="flex items-start text-sm py-1">
       {Icon && <Icon className="mr-2 h-4 w-4 text-muted-foreground mt-0.5" />}
-      <span className="font-medium text-muted-foreground min-w-[200px]">{label}:&nbsp;</span>
-      {displayValue}
+      <span className="font-medium text-muted-foreground min-w-[200px] shrink-0">{label}:&nbsp;</span>
+      <div className="break-words min-w-0">{displayValue}</div>
     </div>
   )
 }
@@ -157,7 +157,6 @@ export default async function PatientDocumentsPage({ params }: { params: { patie
           />
           <DetailItem label="Formulaire S2 Patient (Info)" value={patientDetails.patient_s2_form} icon={FileText} />
           <DetailItem label="Lettre GP (Info)" value={patientDetails.lettre_gp} icon={FileText} />
-          {/* Ajoutez d'autres DetailItem ici pour les champs que vous avez ajoutés à PatientDetailsType */}
         </CardContent>
       </Card>
 
@@ -169,3 +168,4 @@ export default async function PatientDocumentsPage({ params }: { params: { patie
     </div>
   )
 }
+
