@@ -1,67 +1,26 @@
-import type React from "react"
+// Ceci est la page de LISTE des patients.
+// Le contenu précédent a été déplacé vers [patientId]/documents/page.tsx
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
-import PatientDocumentManager from "@/components/patient-document-manager"
-import { getDocumentsForPatient, getPatientDetails, type PatientDetailsType } from "@/app/actions/document-actions"
-import {
-  AlertTriangle,
-  UserCircle,
-  Mail,
-  Phone,
-  Scale,
-  TrendingUp,
-  FileTextIcon,
-  CheckCircle,
-  XCircle,
-  FileType2,
-  Info,
-  FileText,
-} from "lucide-react"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { User, FileText, Search } from "lucide-react"
+import { searchPatients } from "@/app/actions/patient-actions" // Assurez-vous que cette action existe
 
-// Helper pour afficher une information si elle existe
-const DetailItem = ({
-  label,
-  value,
-  icon: Icon,
-  isBoolean,
-}: {
-  label: string
-  value: string | number | boolean | null | undefined
-  icon?: React.ElementType
-  isBoolean?: boolean
-}) => {
-  if (value === null || value === undefined || (typeof value === "string" && value === "")) return null
-
-  let displayValue: React.ReactNode = value as React.ReactNode
-  if (isBoolean) {
-    displayValue = value ? (
-      <Badge variant="default" className="bg-green-500 hover:bg-green-600 text-white">
-        <CheckCircle className="mr-1 h-3 w-3" /> Oui
-      </Badge>
-    ) : (
-      <Badge variant="destructive">
-        <XCircle className="mr-1 h-3 w-3" /> Non
-      </Badge>
-    )
-  } else if (typeof value === "string" && value.length > 100) {
-    displayValue = <p className="text-sm whitespace-pre-wrap">{value.substring(0, 100)}...</p>
-  } else if (typeof value === "string") {
-    displayValue = <p className="text-sm whitespace-pre-wrap">{value}</p>
-  }
-
-  return (
-    <div className="flex items-start text-sm py-1">
-      {Icon && <Icon className="mr-2 h-4 w-4 text-muted-foreground mt-0.5" />}
-      <span className="font-medium text-muted-foreground min-w-[200px] shrink-0">{label}:&nbsp;</span>
-      <div className="break-words min-w-0">{displayValue}</div>
-    </div>
-  )
+// Interface simple pour un patient dans la liste
+interface PatientListItem {
+  id: string
+  full_name: string | null
+  // Ajoutez d'autres champs si nécessaire pour la liste, ex: email
 }
 
-export default async function PatientDocumentsPage({ params }: { params: { patientId: string } }) {
+export default async function PatientsListPage({
+  searchParams,
+}: {
+  searchParams?: { query?: string }
+}) {
   const supabase = createSupabaseServerClient()
   const {
     data: { user },
@@ -71,99 +30,69 @@ export default async function PatientDocumentsPage({ params }: { params: { patie
     redirect("/login")
   }
 
-  const patientId = params.patientId
-  if (!patientId) {
-    return (
-      <Alert variant="destructive">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Erreur</AlertTitle>
-        <AlertDescription>ID du patient manquant.</AlertDescription>
-      </Alert>
-    )
-  }
-
-  const patientDetails: PatientDetailsType | null = await getPatientDetails(patientId)
-  if (!patientDetails) {
-    return (
-      <Alert variant="destructive">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Patient non trouvé</AlertTitle>
-        <AlertDescription>
-          Aucun patient trouvé avec l'ID: {patientId}. Veuillez vérifier l'ID ou créer ce patient.
-        </AlertDescription>
-      </Alert>
-    )
-  }
-
-  const initialDocuments = await getDocumentsForPatient(patientId)
+  const query = searchParams?.query || ""
+  const patients: PatientListItem[] = await searchPatients(query) // Utilise searchPatients
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <UserCircle className="mr-2 h-7 w-7" />
-            {patientDetails.full_name || `Patient ${patientId.substring(0, 8)}...`}
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center">
+              <User className="mr-2 h-7 w-7" />
+              Liste des Patients
+            </div>
+            {/* Vous pouvez ajouter un bouton "Ajouter Patient" ici plus tard */}
+            {/* <Button asChild><Link href="/dashboard/patients/new">Ajouter Patient</Link></Button> */}
           </CardTitle>
-          <CardDescription>Informations détaillées du patient.</CardDescription>
+          <CardDescription>Recherchez et sélectionnez un patient pour voir ses documents.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-1">
-          <DetailItem label="Email" value={patientDetails.email} icon={Mail} />
-          <DetailItem label="Téléphone" value={patientDetails.phone} icon={Phone} />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-3 gap-y-1 pt-2">
-            <DetailItem label="Poids" value={patientDetails.poids ? `${patientDetails.poids} kg` : null} icon={Scale} />
-            <DetailItem
-              label="Taille"
-              value={patientDetails.taille ? `${patientDetails.taille} cm` : null}
-              icon={TrendingUp}
+        <CardContent>
+          {/* Barre de recherche (simple pour l'instant, peut être améliorée) */}
+          <form className="mb-4 flex gap-2">
+            <input
+              type="text"
+              name="query"
+              placeholder="Rechercher par nom..."
+              defaultValue={query}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             />
-            <DetailItem label="IMC" value={patientDetails.bmi} icon={FileTextIcon} />
-          </div>
+            <Button type="submit">
+              <Search className="mr-2 h-4 w-4" /> Rechercher
+            </Button>
+          </form>
+
+          {patients.length === 0 ? (
+            <p className="text-muted-foreground text-center">
+              {query ? `Aucun patient trouvé pour "${query}".` : "Aucun patient à afficher."}
+            </p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nom Complet</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {patients.map((patient) => (
+                  <TableRow key={patient.id}>
+                    <TableCell className="font-medium">{patient.full_name || "Nom non défini"}</TableCell>
+                    <TableCell className="text-right">
+                      <Button asChild variant="outline" size="sm">
+                        <Link href={`/dashboard/patients/${patient.id}/documents`}>
+                          <FileText className="mr-2 h-4 w-4" /> Voir Documents
+                        </Link>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+          {/* Pagination à ajouter ici si nécessaire */}
         </CardContent>
       </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Info className="mr-2 h-6 w-6" />
-            État des Documents (Patient)
-          </CardTitle>
-          <CardDescription>Informations sur les documents directement depuis la fiche patient.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-1">
-          <DetailItem label="Facture Envoyée" value={patientDetails.facture_envoye} icon={FileType2} isBoolean />
-          <DetailItem
-            label="Accord Médical Obtenu"
-            value={patientDetails.medical_agrement}
-            icon={FileType2}
-            isBoolean
-          />
-          <DetailItem
-            label="Formulaire de Consentement Reçu"
-            value={patientDetails.consent_form}
-            icon={FileType2}
-            isBoolean
-          />
-          <DetailItem
-            label="Compte Rendu Hospitalisation (Résumé)"
-            value={patientDetails.compte_rendu_hospitalisation}
-            icon={FileText}
-          />
-          <DetailItem
-            label="Compte Rendu Consultation (Résumé)"
-            value={patientDetails.compte_rendu_consultation}
-            icon={FileText}
-          />
-          <DetailItem label="Formulaire S2 Patient (Info)" value={patientDetails.patient_s2_form} icon={FileText} />
-          <DetailItem label="Lettre GP (Info)" value={patientDetails.lettre_gp} icon={FileText} />
-        </CardContent>
-      </Card>
-
-      <PatientDocumentManager
-        patientId={patientId}
-        initialDocuments={initialDocuments}
-        patientName={patientDetails.full_name || `Patient ${patientId.substring(0, 8)}...`}
-      />
     </div>
   )
 }
