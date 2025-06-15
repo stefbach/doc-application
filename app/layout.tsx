@@ -13,7 +13,7 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Gestion Documents Patient",
   description: "Application pour gérer les documents des patients avec Supabase",
-    generator: 'v0.dev'
+  generator: "v0.dev",
 }
 
 export default async function RootLayout({
@@ -32,7 +32,7 @@ export default async function RootLayout({
         <header className="border-b">
           <div className="container mx-auto flex h-16 items-center justify-between px-4">
             <Link href="/" className="font-bold text-xl">
-              DocPatient
+              Obesity Care Clinic
             </Link>
             <nav className="flex items-center space-x-4">
               {user ? (
