@@ -173,4 +173,3 @@ export async function deleteDocumentAction(documentId: string, storagePath: stri
     revalidatePath(`/dashboard/patients/${documentData.patient_id}/documents`)
   }
 }
-
