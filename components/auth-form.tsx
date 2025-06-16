@@ -22,8 +22,8 @@ interface AuthFormProps {
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
-  password: z.string().min(8, {
-    message: "Password must be at least 8 characters.",
+  password: z.string().min(1, {
+    message: "Le mot de passe ne peut pas être vide.",
   }),
 })
 
@@ -163,24 +163,24 @@ const AuthForm: React.FC<AuthFormProps> = ({ type, className }) => {
         </form>
       </Form>
       {/* 
-        The toggle functionality needs to be properly implemented if desired.
-        This typically involves the parent component controlling the 'type' prop,
-        or this component managing its own 'formType' state.
-        For simplicity, if you have separate /login and /signup pages,
-        each would render AuthForm with a fixed 'type' prop.
-        If you want a single page that toggles, the logic would be different.
-        The original AuthForm from previous turns had a self-contained toggle.
-        This version from Git sync receives 'type' as a prop.
-      */}
+      The toggle functionality needs to be properly implemented if desired.
+      This typically involves the parent component controlling the 'type' prop,
+      or this component managing its own 'formType' state.
+      For simplicity, if you have separate /login and /signup pages,
+      each would render AuthForm with a fixed 'type' prop.
+      If you want a single page that toggles, the logic would be different.
+      The original AuthForm from previous turns had a self-contained toggle.
+      This version from Git sync receives 'type' as a prop.
+    */}
       {/* <div className="text-sm text-center">
-        <button
-          type="button"
-          onClick={toggleFormType}
-          className="font-medium text-primary hover:text-primary/90"
-        >
-          {toggleFormText}
-        </button>
-      </div> */}
+      <button
+        type="button"
+        onClick={toggleFormType}
+        className="font-medium text-primary hover:text-primary/90"
+      >
+        {toggleFormText}
+      </button>
+    </div> */}
     </div>
   )
 }
