@@ -3,7 +3,8 @@ import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import PatientDocumentManager from "@/components/patient-document-manager"
 import PatientDocumentStatusComponent from "@/components/patient-document-status"
-import { getDocumentsForPatient, getPatientDetails, type PatientDetailsType } from "@/app/actions/document-actions"
+import { getDocumentsForPatient, getPatientDetails } from "@/app/actions/document-actions"
+import type { PatientDetailsType } from "@/app/actions/types"
 import { identifyPatientDocuments } from "@/app/actions/patient-actions"
 import {
   AlertTriangle,

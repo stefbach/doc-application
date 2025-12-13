@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { CheckCircle2, XCircle, FileText, AlertCircle } from "lucide-react"
-import type { PatientDocumentStatus } from "@/app/actions/patient-actions"
+import type { PatientDocumentStatus } from "@/app/actions/types"
 
 interface PatientDocumentStatusProps {
   status: PatientDocumentStatus

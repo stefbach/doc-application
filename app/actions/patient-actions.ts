@@ -3,6 +3,13 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { unstable_noStore as noStore } from "next/cache"
 import { revalidatePath } from "next/cache"
+import type {
+  DocumentType,
+  PatientDetailsType,
+  DocumentSummaryByCategory,
+  PatientDocumentStatus,
+} from "./types"
+import { ALL_DOCUMENT_CATEGORIES } from "./types"
 
 // Fonction searchPatients restaurée
 export async function searchPatients(query: string) {
@@ -28,19 +35,7 @@ export async function searchPatients(query: string) {
   return data || []
 }
 
-// Le reste de vos interfaces et fonctions existantes dans ce fichier :
-export interface DocumentType {
-  id: string
-  patient_id: string
-  file_name: string
-  storage_path: string
-  file_type: string | null
-  file_size: number | null
-  uploaded_at: string
-  user_id: string | null
-  document_category: string | null
-}
-
+// Interface locale (non exportée)
 interface NewDocumentMetadata {
   patient_id: string
   file_name: string
@@ -48,23 +43,6 @@ interface NewDocumentMetadata {
   file_type?: string
   file_size?: number
   document_category: string
-}
-
-export interface PatientDetailsType {
-  id: string
-  full_name: string | null
-  email: string | null
-  phone: string | null
-  poids: number | null
-  taille: number | null
-  bmi: number | null
-  facture_envoye: boolean | null
-  medical_agrement: boolean | null
-  consent_form: boolean | null
-  compte_rendu_hospitalisation: string | null
-  compte_rendu_consultation: string | null
-  patient_s2_form: string | null
-  lettre_gp: string | null
 }
 
 export async function getPatientDetails(patientId: string): Promise<PatientDetailsType | null> {
@@ -164,35 +142,6 @@ export async function deleteDocumentAction(documentId: string, storagePath: stri
   if (documentData?.patient_id) {
     revalidatePath(`/dashboard/patients/${documentData.patient_id}/documents`)
   }
-}
-
-// Toutes les catégories de documents possibles
-export const ALL_DOCUMENT_CATEGORIES = [
-  "Facture",
-  "Contrat",
-  "Simulation Financière",
-  "Compte Rendu Hospitalisation",
-  "Compte Rendu Consultation",
-  "Lettre GP",
-  "Formulaire S2",
-  "Autre",
-] as const
-
-// Interface pour le résumé des documents par catégorie
-export interface DocumentSummaryByCategory {
-  category: string
-  count: number
-  documents: DocumentType[]
-}
-
-// Interface pour le statut complet des documents d'un patient
-export interface PatientDocumentStatus {
-  patientId: string
-  patientName: string | null
-  totalDocuments: number
-  documentsByCategory: DocumentSummaryByCategory[]
-  missingCategories: string[]
-  completionPercentage: number
 }
 
 /**

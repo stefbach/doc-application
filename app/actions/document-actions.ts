@@ -2,18 +2,7 @@
 
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
-
-export interface DocumentType {
-  id: string
-  patient_id: string
-  file_name: string
-  storage_path: string
-  file_type: string | null
-  file_size: number | null
-  uploaded_at: string
-  user_id: string | null
-  document_category: string | null
-}
+import type { DocumentType, PatientDetailsType } from "./types"
 
 interface NewDocumentMetadata {
   patient_id: string
@@ -22,23 +11,6 @@ interface NewDocumentMetadata {
   file_type?: string
   file_size?: number
   document_category: string // Important: this is the category selected during upload
-}
-
-export interface PatientDetailsType {
-  id: string
-  full_name: string | null
-  email: string | null
-  phone: string | null
-  poids: number | null
-  taille: number | null
-  bmi: number | null
-  facture_envoye: boolean | null
-  medical_agrement: boolean | null
-  consent_form: boolean | null
-  compte_rendu_hospitalisation: string | null
-  compte_rendu_consultation: string | null
-  patient_s2_form: string | null
-  lettre_gp: string | null
 }
 
 export async function getPatientDetails(patientId: string): Promise<PatientDetailsType | null> {

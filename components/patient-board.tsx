@@ -17,7 +17,7 @@ import {
   FolderOpen,
 } from "lucide-react"
 import Link from "next/link"
-import type { PatientDocumentStatus } from "@/app/actions/patient-actions"
+import type { PatientDocumentStatus } from "@/app/actions/types"
 import type { PatientList } from "@/app/actions/types"
 import {
   addPatientToList,
