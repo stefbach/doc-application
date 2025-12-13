@@ -10,10 +10,8 @@ export default async function HomePage() {
   } = await supabase.auth.getUser()
 
   if (user) {
-    // Redirige vers un tableau de bord ou une page de liste de patients
-    // Pour cet exemple, on va vers une page de patient spécifique (ID à remplacer)
-    // Idéalement, vous auriez une page listant les patients ou un dashboard.
-    redirect(`/dashboard/patients`) // Remplacez par un ID de patient valide
+    // Redirection vers le dashboard principal
+    redirect(`/dashboard`)
   }
 
   return (
