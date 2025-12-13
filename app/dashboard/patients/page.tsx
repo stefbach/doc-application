@@ -4,7 +4,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { FileText, SearchIcon, Inbox, ListChecks } from "lucide-react"
+import { FileText, SearchIcon, Inbox, ListChecks, LayoutDashboard } from "lucide-react"
 import { searchPatients } from "@/app/actions/patient-actions"
 import { Input } from "@/components/ui/input"
 
@@ -37,7 +37,21 @@ export default async function PatientsSearchPage({
           <SearchIcon className="mr-3 h-8 w-8" />
           Rechercher un Patient
         </h1>
-        <p className="text-muted-foreground mb-6">Entrez le nom du patient que vous souhaitez trouver.</p>
+        <p className="text-muted-foreground mb-4">Entrez le nom du patient que vous souhaitez trouver.</p>
+        <div className="mb-6 flex gap-2 justify-center">
+          <Button asChild variant="outline" size="sm">
+            <Link href="/dashboard/patients/all">
+              <ListChecks className="mr-2 h-4 w-4" />
+              Vue d'ensemble
+            </Link>
+          </Button>
+          <Button asChild size="sm">
+            <Link href="/dashboard/board">
+              <LayoutDashboard className="mr-2 h-4 w-4" />
+              Tableau de bord
+            </Link>
+          </Button>
+        </div>
         <form className="flex gap-2 items-center">
           <Input
             type="text"
