@@ -1,0 +1,149 @@
+╔══════════════════════════════════════════════════════════════════════════╗
+║                        🚨 ACTION IMMÉDIATE 🚨                            ║
+║                   Vercel Bloqué sur Ancien Commit                        ║
+╔══════════════════════════════════════════════════════════════════════════╗
+
+📊 DIAGNOSTIC
+─────────────
+Vercel utilise : d62dcc4 (ANCIEN - 23 commits en retard)
+GitHub a : cdf59a9 (RÉCENT - avec tous les correctifs)
+
+⚠️  CONSÉQUENCE : Le code de Vercel contient les anciennes erreurs déjà corrigées
+
+
+🎯 SOLUTION 1 : REDÉPLOIEMENT MANUEL (FAIRE MAINTENANT)
+═══════════════════════════════════════════════════════
+
+1️⃣  OUVRIR VERCEL
+    https://vercel.com/stefbach/doc-application
+
+2️⃣  ONGLET "DEPLOYMENTS"
+    • Cliquer sur le déploiement qui a échoué (celui avec d62dcc4)
+
+3️⃣  REDÉPLOYER
+    • Bouton "Redeploy" (en haut à droite)
+    • ⚠️⚠️⚠️ DÉCOCHER "Use existing Build Cache" ⚠️⚠️⚠️
+    • Confirmer le redéploiement
+
+4️⃣  SURVEILLER LES LOGS
+    Première ligne doit montrer :
+    ✓ Cloning (Commit: cdf59a9)  ← ou >= 4b8f3df
+    
+    Si vous voyez encore "d62dcc4" → Passer à SOLUTION 2
+
+
+📈 RÉSULTAT ATTENDU
+───────────────────
+• Build Vercel réussit avec commit cdf59a9
+• Application déployée avec :
+  ✅ Dashboard principal fonctionnel
+  ✅ Recherche patients opérationnelle  
+  ✅ Gestion documents complète
+
+
+🔄 SOLUTION 2 : DÉCONNEXION GIT (SI SOLUTION 1 ÉCHOUE)
+══════════════════════════════════════════════════════
+
+1️⃣  SETTINGS → GIT
+    https://vercel.com/stefbach/doc-application/settings/git
+
+2️⃣  DÉCONNECTER
+    • Bouton "Disconnect" (en bas)
+    • Confirmer
+
+3️⃣  ATTENDRE 30 SECONDES
+    (Important pour la synchronisation)
+
+4️⃣  RECONNECTER
+    • "Connect Git Repository"
+    • Sélectionner GitHub → stefbach/doc-application
+    • Production Branch : main
+    • Confirmer
+
+5️⃣  VÉRIFIER LE COMMIT
+    • Dernier commit doit être cdf59a9 ou 4b8f3df
+    • Si c'est d62dcc4 → Contacter Support Vercel
+
+6️⃣  DÉCLENCHER BUILD
+    • Bouton "Deploy" sur la page d'accueil
+    • Ou attendre 1-2 minutes (auto)
+
+
+🆘 SOLUTION 3 : NOUVEAU PROJET (DERNIER RECOURS)
+════════════════════════════════════════════════
+
+1️⃣  CRÉER NOUVEAU PROJET
+    • Dashboard Vercel → "Add New" → "Project"
+    • Import github.com/stefbach/doc-application
+    • Nom : doc-application-v2
+
+2️⃣  COPIER VARIABLES D'ENVIRONNEMENT
+    De l'ancien projet vers le nouveau :
+    • NEXT_PUBLIC_SUPABASE_URL
+    • NEXT_PUBLIC_SUPABASE_ANON_KEY
+    • SUPABASE_SERVICE_ROLE_KEY
+    • (Toutes les autres)
+
+3️⃣  DÉPLOYER
+    • Cliquer "Deploy"
+    • Vérifier que le commit est cdf59a9
+
+4️⃣  TESTER L'APPLICATION
+    • Vérifier que tout fonctionne
+
+5️⃣  SUPPRIMER L'ANCIEN PROJET
+    (Après validation complète)
+
+
+📞 SI RIEN NE MARCHE
+═════════════════════
+
+CONTACTER SUPPORT VERCEL :
+• Projet bloqué sur commit d62dcc4 (ancien)
+• GitHub montre commit cdf59a9 (récent)
+• Écart de 23 commits
+• Demander "hard refresh" du cache Git
+
+INFORMATIONS À FOURNIR :
+• URL : https://vercel.com/stefbach/doc-application
+• Repo : https://github.com/stefbach/doc-application
+• Commit Vercel : d62dcc4
+• Commit GitHub : cdf59a9
+• Erreur : "use server file can only export async functions"
+
+
+✅ CHECKLIST RAPIDE
+═══════════════════
+
+Avant de contacter le support, assurez-vous d'avoir essayé :
+[ ] Solution 1 : Redéploiement sans cache
+[ ] Solution 2 : Déconnexion/Reconnexion Git
+[ ] Solution 3 : Nouveau projet Vercel
+[ ] Vérifié Settings → Git (bon repository, bonne branche)
+[ ] Attendu au moins 5 minutes entre chaque tentative
+
+
+🔍 VÉRIFICATION BUILD RÉUSSI
+════════════════════════════
+
+Logs Vercel doivent montrer :
+✓ Cloning (Commit: cdf59a9)  ← BON COMMIT
+✓ Compiled successfully
+✓ Collecting page data
+✓ Build completed successfully
+
+Application accessible avec :
+✓ /dashboard (statistiques, graphiques)
+✓ /dashboard/patients (recherche)
+✓ /dashboard/patients/[id]/documents (gestion)
+
+
+╔══════════════════════════════════════════════════════════════════════════╗
+║  CODE GITHUB : ✅ 100% CORRECT (commit cdf59a9)                          ║
+║  VERCEL : ❌ BLOQUÉ SUR ANCIEN COMMIT (d62dcc4)                          ║
+║  ACTION : Forcer Vercel à utiliser le nouveau commit                    ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+Date : 2025-12-13
+Commit actuel : cdf59a9
+Status : 🔴 ACTION IMMÉDIATE REQUISE
