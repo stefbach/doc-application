@@ -17,16 +17,17 @@ const navItems = [
     label: "Recherche",
     icon: Search,
   },
-  {
-    href: "/dashboard/patients/all",
-    label: "Tableau de Suivi",
-    icon: Table,
-  },
-  {
-    href: "/dashboard/board",
-    label: "Vue Kanban",
-    icon: Layers,
-  },
+  // Temporairement désactivés en attendant la correction Git/Vercel
+  // {
+  //   href: "/dashboard/patients/all",
+  //   label: "Tableau de Suivi",
+  //   icon: Table,
+  // },
+  // {
+  //   href: "/dashboard/board",
+  //   label: "Vue Kanban",
+  //   icon: Layers,
+  // },
 ]
 
 export function DashboardNav() {

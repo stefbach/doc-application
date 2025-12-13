@@ -65,16 +65,10 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button asChild variant="outline">
+          <Button asChild>
             <Link href="/dashboard/patients">
               <Search className="mr-2 h-4 w-4" />
-              Rechercher
-            </Link>
-          </Button>
-          <Button asChild>
-            <Link href="/dashboard/patients/all">
-              <TableIcon className="mr-2 h-4 w-4" />
-              Tableau de suivi
+              Rechercher un Patient
             </Link>
           </Button>
         </div>
@@ -160,36 +154,16 @@ export default async function DashboardPage() {
       {/* Actions rapides */}
       <Card>
         <CardHeader>
-          <CardTitle>Actions Rapides</CardTitle>
-          <CardDescription>Accédez rapidement aux fonctionnalités principales</CardDescription>
+          <CardTitle>Action Rapide</CardTitle>
+          <CardDescription>Recherchez un patient pour gérer ses documents</CardDescription>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Button asChild variant="outline" className="h-auto py-6 flex-col">
+        <CardContent className="flex justify-center">
+          <Button asChild variant="outline" size="lg" className="h-auto py-6 px-8 flex-col">
             <Link href="/dashboard/patients">
-              <Search className="h-8 w-8 mb-2" />
-              <span className="font-semibold">Rechercher un Patient</span>
-              <span className="text-xs text-muted-foreground mt-1">
-                Trouver et gérer les documents
-              </span>
-            </Link>
-          </Button>
-
-          <Button asChild variant="outline" className="h-auto py-6 flex-col">
-            <Link href="/dashboard/patients/all">
-              <FileText className="h-8 w-8 mb-2" />
-              <span className="font-semibold">Tableau de Suivi</span>
-              <span className="text-xs text-muted-foreground mt-1">
-                Vue d'ensemble détaillée
-              </span>
-            </Link>
-          </Button>
-
-          <Button asChild variant="outline" className="h-auto py-6 flex-col">
-            <Link href="/dashboard/board">
-              <LayoutDashboard className="h-8 w-8 mb-2" />
-              <span className="font-semibold">Tableau Kanban</span>
-              <span className="text-xs text-muted-foreground mt-1">
-                Organisation par listes
+              <Search className="h-12 w-12 mb-3" />
+              <span className="font-semibold text-lg">Rechercher un Patient</span>
+              <span className="text-sm text-muted-foreground mt-2">
+                Trouver et gérer les documents d'un patient
               </span>
             </Link>
           </Button>
