@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
 import { createPatientList, updatePatientList } from "@/app/actions/list-actions"
-import type { PatientList } from "@/app/actions/list-actions"
+import type { PatientList } from "@/app/actions/types"
 
 interface ListFormProps {
   userId: string

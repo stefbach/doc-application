@@ -3,25 +3,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { unstable_noStore as noStore } from "next/cache"
 import { revalidatePath } from "next/cache"
-
-export interface PatientList {
-  id: string
-  name: string
-  description: string | null
-  color: string
-  icon: string | null
-  user_id: string
-  created_at: string
-  updated_at: string
-  patient_count?: number
-}
-
-export interface ListPatientAssignment {
-  id: string
-  list_id: string
-  patient_id: string
-  created_at: string
-}
+import type { PatientList } from "./types"
 
 /**
  * Récupère toutes les listes d'un utilisateur

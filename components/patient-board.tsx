@@ -18,7 +18,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import type { PatientDocumentStatus } from "@/app/actions/patient-actions"
-import type { PatientList } from "@/app/actions/list-actions"
+import type { PatientList } from "@/app/actions/types"
 import {
   addPatientToList,
   removePatientFromList,
