@@ -2,7 +2,9 @@ import type React from "react"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import PatientDocumentManager from "@/components/patient-document-manager"
-import { getDocumentsForPatient, getPatientDetails, type PatientDetailsType } from "@/app/actions/document-actions" // Importez PatientDetailsType
+import PatientDocumentStatusComponent from "@/components/patient-document-status"
+import { getDocumentsForPatient, getPatientDetails, type PatientDetailsType } from "@/app/actions/document-actions"
+import { identifyPatientDocuments } from "@/app/actions/patient-actions"
 import {
   AlertTriangle,
   UserCircle,
@@ -84,31 +86,48 @@ export default async function PatientDocumentsPage({ params }: { params: { patie
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <UserCircle className="mr-2 h-7 w-7" />
-            {patientDetails.full_name || `Patient ${patientId.substring(0, 8)}...`}
-          </CardTitle>
-          <CardDescription>Informations détaillées du patient.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <DetailItem label="Email" value={patientDetails.email} icon={Mail} />
-          <DetailItem label="Téléphone" value={patientDetails.numero_de_telephone} icon={Phone} />
-          <DetailItem label="Adresse" value={patientDetails.adresse} icon={MapPin} />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <DetailItem label="Poids" value={patientDetails.poids ? `${patientDetails.poids} kg` : null} icon={Scale} />
-            <DetailItem
-              label="Taille"
-              value={patientDetails.taille ? `${patientDetails.taille} cm` : null}
-              icon={TrendingUp}
-            />
-            <DetailItem label="IMC" value={patientDetails.bmi} icon={FileTextIcon} />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Informations patient - 2/3 de l'espace */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <UserCircle className="mr-2 h-7 w-7" />
+                {patientDetails.full_name || `Patient ${patientId.substring(0, 8)}...`}
+              </CardTitle>
+              <CardDescription>Informations détaillées du patient.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <DetailItem label="Email" value={patientDetails.email} icon={Mail} />
+              <DetailItem label="Téléphone" value={patientDetails.numero_de_telephone} icon={Phone} />
+              <DetailItem label="Adresse" value={patientDetails.adresse} icon={MapPin} />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <DetailItem
+                  label="Poids"
+                  value={patientDetails.poids ? `${patientDetails.poids} kg` : null}
+                  icon={Scale}
+                />
+                <DetailItem
+                  label="Taille"
+                  value={patientDetails.taille ? `${patientDetails.taille} cm` : null}
+                  icon={TrendingUp}
+                />
+                <DetailItem label="IMC" value={patientDetails.bmi} icon={FileTextIcon} />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Le gestionnaire de documents reste ici */}
+        {/* Statut des documents - 1/3 de l'espace */}
+        <div className="lg:col-span-1">
+          {documentStatus && <PatientDocumentStatusComponent status={documentStatus} showDetails={false} />}
+        </div>
+      </div>
+
+      {/* Statut détaillé des documents */}
+      {documentStatus && <PatientDocumentStatusComponent status={documentStatus} showDetails={true} />}
+
+      {/* Le gestionnaire de documents */}
       <PatientDocumentManager
         patientId={patientId}
         initialDocuments={initialDocuments}

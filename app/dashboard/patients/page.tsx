@@ -4,7 +4,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { FileText, SearchIcon, Inbox } from "lucide-react"
+import { FileText, SearchIcon, Inbox, ListChecks } from "lucide-react"
 import { searchPatients } from "@/app/actions/patient-actions"
 import { Input } from "@/components/ui/input"
 

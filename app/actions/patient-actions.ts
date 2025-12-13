@@ -165,3 +165,122 @@ export async function deleteDocumentAction(documentId: string, storagePath: stri
     revalidatePath(`/dashboard/patients/${documentData.patient_id}/documents`)
   }
 }
+
+// Toutes les catégories de documents possibles
+export const ALL_DOCUMENT_CATEGORIES = [
+  "Facture",
+  "Contrat",
+  "Simulation Financière",
+  "Compte Rendu Hospitalisation",
+  "Compte Rendu Consultation",
+  "Lettre GP",
+  "Formulaire S2",
+  "Autre",
+] as const
+
+// Interface pour le résumé des documents par catégorie
+export interface DocumentSummaryByCategory {
+  category: string
+  count: number
+  documents: DocumentType[]
+}
+
+// Interface pour le statut complet des documents d'un patient
+export interface PatientDocumentStatus {
+  patientId: string
+  patientName: string | null
+  totalDocuments: number
+  documentsByCategory: DocumentSummaryByCategory[]
+  missingCategories: string[]
+  completionPercentage: number
+}
+
+/**
+ * Identifie tous les documents pour un patient donné
+ * Retourne un résumé organisé par catégorie
+ */
+export async function identifyPatientDocuments(patientId: string): Promise<PatientDocumentStatus | null> {
+  noStore()
+  
+  if (!patientId) return null
+
+  const supabase = createSupabaseServerClient()
+
+  // Récupérer les informations du patient
+  const patient = await getPatientDetails(patientId)
+  if (!patient) return null
+
+  // Récupérer tous les documents du patient
+  const documents = await getDocumentsForPatient(patientId)
+
+  // Grouper les documents par catégorie
+  const documentsByCategory: { [key: string]: DocumentType[] } = {}
+  
+  documents.forEach((doc) => {
+    const category = doc.document_category || "Autre"
+    if (!documentsByCategory[category]) {
+      documentsByCategory[category] = []
+    }
+    documentsByCategory[category].push(doc)
+  })
+
+  // Créer le résumé par catégorie
+  const summaries: DocumentSummaryByCategory[] = ALL_DOCUMENT_CATEGORIES.map((category) => ({
+    category,
+    count: documentsByCategory[category]?.length || 0,
+    documents: documentsByCategory[category] || [],
+  }))
+
+  // Identifier les catégories manquantes (sans "Autre")
+  const missingCategories = ALL_DOCUMENT_CATEGORIES.filter(
+    (cat) => cat !== "Autre" && (!documentsByCategory[cat] || documentsByCategory[cat].length === 0),
+  )
+
+  // Calculer le pourcentage de complétion (hors catégorie "Autre")
+  const requiredCategories = ALL_DOCUMENT_CATEGORIES.filter((cat) => cat !== "Autre")
+  const completedCategories = requiredCategories.filter(
+    (cat) => documentsByCategory[cat] && documentsByCategory[cat].length > 0,
+  )
+  const completionPercentage = Math.round((completedCategories.length / requiredCategories.length) * 100)
+
+  return {
+    patientId,
+    patientName: patient.full_name,
+    totalDocuments: documents.length,
+    documentsByCategory: summaries,
+    missingCategories,
+    completionPercentage,
+  }
+}
+
+/**
+ * Identifie tous les documents pour tous les patients
+ * Utile pour avoir une vue d'ensemble
+ */
+export async function identifyAllPatientsDocuments(): Promise<PatientDocumentStatus[]> {
+  noStore()
+  
+  const supabase = createSupabaseServerClient()
+
+  // Récupérer tous les patients
+  const { data: patients, error } = await supabase
+    .from("patients")
+    .select("id, full_name")
+    .order("full_name", { ascending: true })
+
+  if (error) {
+    console.error("Error fetching all patients:", error.message)
+    return []
+  }
+
+  if (!patients || patients.length === 0) {
+    return []
+  }
+
+  // Récupérer le statut des documents pour chaque patient
+  const statusPromises = patients.map((patient) => identifyPatientDocuments(patient.id))
+  const statuses = await Promise.all(statusPromises)
+
+  // Filtrer les résultats null
+  return statuses.filter((status): status is PatientDocumentStatus => status !== null)
+}
