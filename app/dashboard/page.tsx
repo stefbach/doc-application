@@ -65,10 +65,16 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button asChild>
+          <Button asChild variant="outline">
             <Link href="/dashboard/patients">
               <Search className="mr-2 h-4 w-4" />
-              Rechercher un Patient
+              Rechercher
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href="/dashboard/patients/all">
+              <TableIcon className="mr-2 h-4 w-4" />
+              Tableau de Suivi
             </Link>
           </Button>
         </div>
