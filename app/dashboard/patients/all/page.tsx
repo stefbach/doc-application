@@ -30,13 +30,7 @@ export default async function AllPatientsDocumentsPage() {
   return (
     <div className="space-y-6">
       {/* Navigation */}
-      <div className="flex items-center justify-between">
-        <Button asChild variant="outline" size="sm">
-          <Link href="/dashboard">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Retour au Dashboard
-          </Link>
-        </Button>
+      <div className="flex items-center justify-end">
         <Button asChild variant="outline" size="sm">
           <Link href="/dashboard/board">
             <LayoutDashboard className="mr-2 h-4 w-4" />
@@ -49,9 +43,9 @@ export default async function AllPatientsDocumentsPage() {
       <div>
         <h1 className="text-3xl font-bold mb-2 flex items-center">
           <LayoutDashboard className="mr-3 h-8 w-8" />
-          Tableau de Suivi des Patients
+          Liste Complète des Patients ({totalPatients})
         </h1>
-        <p className="text-muted-foreground">Statut de complétion des documents pour tous les patients</p>
+        <p className="text-muted-foreground">Tous les patients avec leur statut de complétion des documents</p>
       </div>
 
       {/* Statistiques globales */}

@@ -41,12 +41,14 @@ interface PatientsTrackingTableProps {
 type SortField = "name" | "documents" | "completion" | "missing"
 type SortDirection = "asc" | "desc"
 type FilterStatus = "all" | "complete" | "incomplete" | "empty"
+type MissingDocumentFilter = "all" | "Facture" | "Contrat" | "Simulation Financière" | "Compte Rendu Hospitalisation" | "Compte Rendu Consultation" | "Lettre GP" | "Formulaire S2"
 
 export function PatientsTrackingTable({ patients }: PatientsTrackingTableProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [sortField, setSortField] = useState<SortField>("name")
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all")
+  const [missingDocFilter, setMissingDocFilter] = useState<MissingDocumentFilter>("all")
 
   // Filtrage et tri
   const filteredAndSortedPatients = useMemo(() => {
@@ -67,6 +69,11 @@ export function PatientsTrackingTable({ patients }: PatientsTrackingTableProps) 
         if (filterStatus === "empty") return p.totalDocuments === 0
         return true
       })
+    }
+
+    // Filtrage par document manquant
+    if (missingDocFilter !== "all") {
+      result = result.filter((p) => p.missingCategories.includes(missingDocFilter))
     }
 
     // Tri
@@ -106,11 +113,12 @@ export function PatientsTrackingTable({ patients }: PatientsTrackingTableProps) 
   const clearFilters = () => {
     setSearchQuery("")
     setFilterStatus("all")
+    setMissingDocFilter("all")
     setSortField("name")
     setSortDirection("asc")
   }
 
-  const hasActiveFilters = searchQuery !== "" || filterStatus !== "all"
+  const hasActiveFilters = searchQuery !== "" || filterStatus !== "all" || missingDocFilter !== "all"
 
   // Statistiques filtrées
   const stats = useMemo(() => {
@@ -133,36 +141,56 @@ export function PatientsTrackingTable({ patients }: PatientsTrackingTableProps) 
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Barre de filtres */}
-        <div className="flex flex-col md:flex-row gap-3">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Rechercher un patient..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col md:flex-row gap-3">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Rechercher un patient..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+
+            <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as FilterStatus)}>
+              <SelectTrigger className="w-full md:w-[200px]">
+                <Filter className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Filtrer par statut" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les statuts</SelectItem>
+                <SelectItem value="complete">Complets</SelectItem>
+                <SelectItem value="incomplete">Incomplets</SelectItem>
+                <SelectItem value="empty">Sans documents</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {hasActiveFilters && (
+              <Button variant="outline" onClick={clearFilters} size="icon">
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
 
-          <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as FilterStatus)}>
-            <SelectTrigger className="w-full md:w-[200px]">
-              <Filter className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Filtrer par statut" />
+          {/* Nouveau filtre par document manquant */}
+          <Select value={missingDocFilter} onValueChange={(value) => setMissingDocFilter(value as MissingDocumentFilter)}>
+            <SelectTrigger className="w-full">
+              <AlertCircle className="mr-2 h-4 w-4" />
+              <SelectValue placeholder="Filtrer par document manquant" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tous les statuts</SelectItem>
-              <SelectItem value="complete">Complets</SelectItem>
-              <SelectItem value="incomplete">Incomplets</SelectItem>
-              <SelectItem value="empty">Sans documents</SelectItem>
+              <SelectItem value="all">Tous les documents</SelectItem>
+              <SelectItem value="Facture">Patients sans Facture</SelectItem>
+              <SelectItem value="Contrat">Patients sans Contrat</SelectItem>
+              <SelectItem value="Simulation Financière">Patients sans Simulation Financière</SelectItem>
+              <SelectItem value="Compte Rendu Hospitalisation">Patients sans Compte Rendu Hospitalisation</SelectItem>
+              <SelectItem value="Compte Rendu Consultation">Patients sans Compte Rendu Consultation</SelectItem>
+              <SelectItem value="Lettre GP">Patients sans Lettre GP</SelectItem>
+              <SelectItem value="Formulaire S2">Patients sans Formulaire S2</SelectItem>
             </SelectContent>
           </Select>
-
-          {hasActiveFilters && (
-            <Button variant="outline" onClick={clearFilters} size="icon">
-              <X className="h-4 w-4" />
-            </Button>
-          )}
         </div>
 
         {/* Statistiques filtrées */}

@@ -8,19 +8,14 @@ import { cn } from "@/lib/utils"
 
 const navItems = [
   {
-    href: "/dashboard",
-    label: "Dashboard",
-    icon: LayoutDashboard,
+    href: "/dashboard/patients/all",
+    label: "Liste des Patients",
+    icon: Table,
   },
   {
     href: "/dashboard/patients",
     label: "Recherche",
     icon: Search,
-  },
-  {
-    href: "/dashboard/patients/all",
-    label: "Tableau de Suivi",
-    icon: Table,
   },
   {
     href: "/dashboard/board",
