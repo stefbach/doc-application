@@ -80,3 +80,31 @@ export const ALL_DOCUMENT_CATEGORIES = [
   "Lettre GP",
   "Autre",
 ] as const
+
+// Mapping des anciennes catégories vers les nouvelles
+// Pour assurer la compatibilité avec les documents existants
+export const CATEGORY_MAPPING: Record<string, string> = {
+  // Anciennes catégories → Nouvelles catégories
+  "Formulaire S2": "S2 Form",
+  "Facture": "Autre",
+  "Contrat": "Autre",
+  "Simulation Financière": "Autre",
+  "Compte Rendu Hospitalisation": "Autre",
+  // Les nouvelles catégories se mappent sur elles-mêmes
+  "S2 Form": "S2 Form",
+  "S2 Provider": "S2 Provider",
+  "Devis": "Devis",
+  "Compte Rendu Consultation": "Compte Rendu Consultation",
+  "Undelay": "Undelay",
+  "Pièce Identité": "Pièce Identité",
+  "Justificatif de Domicile": "Justificatif de Domicile",
+  "Patient Authorisation Letter": "Patient Authorisation Letter",
+  "Lettre GP": "Lettre GP",
+  "Autre": "Autre",
+}
+
+// Fonction helper pour normaliser une catégorie
+export function normalizeCategory(category: string | null | undefined): string {
+  if (!category) return "Autre"
+  return CATEGORY_MAPPING[category] || "Autre"
+}

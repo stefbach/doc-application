@@ -9,7 +9,7 @@ import type {
   DocumentSummaryByCategory,
   PatientDocumentStatus,
 } from "./types"
-import { ALL_DOCUMENT_CATEGORIES } from "./types"
+import { ALL_DOCUMENT_CATEGORIES, normalizeCategory } from "./types"
 
 // Fonction searchPatients restaurée
 export async function searchPatients(query: string) {
@@ -162,15 +162,16 @@ export async function identifyPatientDocuments(patientId: string): Promise<Patie
   // Récupérer tous les documents du patient
   const documents = await getDocumentsForPatient(patientId)
 
-  // Grouper les documents par catégorie
+  // Grouper les documents par catégorie (avec normalisation des anciennes catégories)
   const documentsByCategory: { [key: string]: DocumentType[] } = {}
   
   documents.forEach((doc) => {
-    const category = doc.document_category || "Autre"
-    if (!documentsByCategory[category]) {
-      documentsByCategory[category] = []
+    // Normaliser la catégorie pour mapper les anciennes vers les nouvelles
+    const normalizedCategory = normalizeCategory(doc.document_category)
+    if (!documentsByCategory[normalizedCategory]) {
+      documentsByCategory[normalizedCategory] = []
     }
-    documentsByCategory[category].push(doc)
+    documentsByCategory[normalizedCategory].push(doc)
   })
 
   // Créer le résumé par catégorie
