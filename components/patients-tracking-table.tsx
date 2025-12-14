@@ -41,7 +41,7 @@ interface PatientsTrackingTableProps {
 type SortField = "name" | "documents" | "completion" | "missing"
 type SortDirection = "asc" | "desc"
 type FilterStatus = "all" | "complete" | "incomplete" | "empty"
-type MissingDocumentFilter = "all" | "Facture" | "Contrat" | "Simulation Financière" | "Compte Rendu Hospitalisation" | "Compte Rendu Consultation" | "Lettre GP" | "Formulaire S2" | "Autre"
+type MissingDocumentFilter = "all" | "S2 Form" | "S2 Provider" | "Devis" | "Compte Rendu Consultation" | "Undelay" | "Pièce Identité" | "Justificatif de Domicile" | "Patient Authorisation Letter" | "Lettre GP" | "Autre"
 
 export function PatientsTrackingTable({ patients }: PatientsTrackingTableProps) {
   const [searchQuery, setSearchQuery] = useState("")
@@ -188,13 +188,15 @@ export function PatientsTrackingTable({ patients }: PatientsTrackingTableProps) 
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tous les documents</SelectItem>
-              <SelectItem value="Facture">Patients sans Facture</SelectItem>
-              <SelectItem value="Contrat">Patients sans Contrat</SelectItem>
-              <SelectItem value="Simulation Financière">Patients sans Simulation Financière</SelectItem>
-              <SelectItem value="Compte Rendu Hospitalisation">Patients sans Compte Rendu Hospitalisation</SelectItem>
+              <SelectItem value="S2 Form">Patients sans S2 Form</SelectItem>
+              <SelectItem value="S2 Provider">Patients sans S2 Provider</SelectItem>
+              <SelectItem value="Devis">Patients sans Devis</SelectItem>
               <SelectItem value="Compte Rendu Consultation">Patients sans Compte Rendu Consultation</SelectItem>
+              <SelectItem value="Undelay">Patients sans Undelay</SelectItem>
+              <SelectItem value="Pièce Identité">Patients sans Pièce Identité</SelectItem>
+              <SelectItem value="Justificatif de Domicile">Patients sans Justificatif de Domicile</SelectItem>
+              <SelectItem value="Patient Authorisation Letter">Patients sans Patient Authorisation Letter</SelectItem>
               <SelectItem value="Lettre GP">Patients sans Lettre GP</SelectItem>
-              <SelectItem value="Formulaire S2">Patients sans Formulaire S2</SelectItem>
               <SelectItem value="Autre">Patients avec documents "Autre"</SelectItem>
             </SelectContent>
           </Select>

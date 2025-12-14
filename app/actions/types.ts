@@ -69,12 +69,14 @@ export interface PatientDocumentStatus {
 
 // Constantes
 export const ALL_DOCUMENT_CATEGORIES = [
-  "Facture",
-  "Contrat",
-  "Simulation Financière",
-  "Compte Rendu Hospitalisation",
+  "S2 Form",
+  "S2 Provider",
+  "Devis",
   "Compte Rendu Consultation",
+  "Undelay",
+  "Pièce Identité",
+  "Justificatif de Domicile",
+  "Patient Authorisation Letter",
   "Lettre GP",
-  "Formulaire S2",
   "Autre",
 ] as const

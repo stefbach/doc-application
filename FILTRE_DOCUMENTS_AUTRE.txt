@@ -1,0 +1,76 @@
+✨ NOUVELLE FONCTIONNALITÉ - Filtre Documents "Autre"
+
+DEMANDE UTILISATEUR :
+"Il faut pouvoir identifier aussi les patients qui ont des dossiers qui sont 
+identifiés 'Autre'. Il peut y avoir un ou plusieurs documents. Il faut pouvoir 
+identifier tous les patients avec des documents attachés."
+
+SOLUTION IMPLÉMENTÉE (commit 7cf58b0) :
+
+1. ✅ NOUVEAU FILTRE "Patients avec documents 'Autre'"
+   - Ajouté dans le menu déroulant "Filtrer par document manquant"
+   - Permet de voir UNIQUEMENT les patients qui ont des documents "Autre"
+   - Affiche le nombre de documents "Autre" pour chaque patient
+
+2. ✅ BADGE VISUEL "Autre"
+   - Badge bleu à côté du nom du patient
+   - Indique le nombre de documents "Autre" (ex: "Autre (2)")
+   - Visible directement dans la liste des patients
+   - Permet d'identifier rapidement les patients concernés
+
+3. ✅ CORRECTION DU FILTRE
+   - Fix du bug où le filtre ne se mettait pas à jour
+   - Ajout de la dépendance `missingDocFilter` dans useMemo
+
+UTILISATION :
+
+Option 1 - Filtre par documents "Autre" :
+1. Ouvrir la liste des patients (/dashboard/patients/all)
+2. Menu déroulant "Filtrer par document manquant"
+3. Sélectionner "Patients avec documents 'Autre'"
+4. ✅ La liste affiche UNIQUEMENT les patients avec documents "Autre"
+
+Option 2 - Identification visuelle rapide :
+1. Ouvrir la liste des patients
+2. Regarder la colonne "Nom du Patient"
+3. ✅ Les patients avec documents "Autre" ont un badge bleu "Autre (X)"
+
+EXEMPLE VISUEL :
+┌─────────────────────────────────┬──────────┬────────────┐
+│ Nom du Patient                  │ Nb Docs  │ Complétion │
+├─────────────────────────────────┼──────────┼────────────┤
+│ Jean Dupont [Autre (2)]         │ 5        │ 80%        │
+│ Marie Martin                    │ 3        │ 60%        │
+│ Pierre Durand [Autre (1)]       │ 4        │ 75%        │
+└─────────────────────────────────┴──────────┴────────────┘
+
+FILTRES DISPONIBLES (8 types) :
+1. Tous les documents (défaut)
+2. Patients sans Facture
+3. Patients sans Contrat
+4. Patients sans Simulation Financière
+5. Patients sans Compte Rendu Hospitalisation
+6. Patients sans Compte Rendu Consultation
+7. Patients sans Lettre GP
+8. Patients sans Formulaire S2
+9. 🆕 Patients avec documents "Autre"
+
+CATÉGORIE "AUTRE" :
+- Documents qui ne correspondent pas aux 7 catégories principales
+- Peut inclure : notes diverses, documents temporaires, etc.
+- Important à identifier pour la gestion complète des dossiers
+
+HISTORIQUE :
+7cf58b0 - Ajout filtre "Autre" + badge visuel
+5e1e24a - Fix erreur page documents
+9cde2c8 - Résolution conflits dépendances
+c13de79 - Update Next.js 15.3.0 (SÉCURITÉ)
+a8a84b2 - FONCTIONNALITÉS (liste 45 patients + filtres)
+
+STATUS : 🟡 Déploiement Vercel en cours (2-3 minutes)
+
+APPLICATION :
+https://v0-supabase-patient-integrat-git-a9277c-bachs-projects-25b173f6.vercel.app
+
+Date : 2025-12-14
+Commit : 7cf58b0
