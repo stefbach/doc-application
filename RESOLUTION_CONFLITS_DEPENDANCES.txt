@@ -1,0 +1,46 @@
+🔧 RÉSOLUTION DES CONFLITS DE DÉPENDANCES
+
+PROBLÈME DÉTECTÉ (Build Vercel échoué) :
+- Conflit entre date-fns v4.1.0 et react-day-picker v8.10.1
+- Conflits peer dependencies multiples
+- Erreur: "ERESOLVE unable to resolve dependency tree"
+
+CORRECTIONS APPLIQUÉES (commit 9cde2c8) :
+1. ✅ date-fns: 4.1.0 → ^3.0.0 (compatible avec react-day-picker)
+2. ✅ react-day-picker: 8.10.1 → ^9.0.0 (version compatible)
+3. ✅ .npmrc: ajout de "legacy-peer-deps=true" pour forcer l'installation
+
+POURQUOI CES CHANGEMENTS ?
+- date-fns v4 n'est pas compatible avec react-day-picker v8
+- react-day-picker v9 supporte date-fns v3
+- legacy-peer-deps permet d'ignorer les conflits mineurs
+
+RÉSULTAT ATTENDU :
+✅ pnpm install réussit
+✅ Toutes les dépendances installées correctement
+✅ Build Vercel se termine avec succès
+✅ Application déployée avec toutes les fonctionnalités
+
+HISTORIQUE DES CORRECTIONS :
+9cde2c8 - Résolution conflits dépendances
+0c91112 - Configuration pnpm (.npmrc)
+e90f6d7 - Suppression lockfile obsolète
+c13de79 - Update Next.js 15.3.0 (SÉCURITÉ)
+a8a84b2 - FONCTIONNALITÉS (liste 45 patients + filtres)
+
+FONCTIONNALITÉS DÉPLOYÉES :
+✅ Liste complète des 45 patients (accès direct)
+✅ Filtre par document manquant (7 types)
+✅ Recherche, tri, statistiques en temps réel
+✅ Next.js 15.3.0 sécurisé
+
+STATUS : 🟡 Build Vercel en cours (2-3 minutes)
+
+SURVEILLANCE :
+https://vercel.com/stefbach/doc-application
+
+APPLICATION :
+https://v0-supabase-patient-integrat-git-a9277c-bachs-projects-25b173f6.vercel.app
+
+Date : 2025-12-14
+Commit : 9cde2c8

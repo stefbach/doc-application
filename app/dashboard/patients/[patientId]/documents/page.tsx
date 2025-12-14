@@ -73,6 +73,7 @@ export default async function PatientDocumentsPage({ params }: { params: { patie
   }
 
   const initialDocuments = await getDocumentsForPatient(patientId)
+  const documentStatus = await identifyPatientDocuments(patientId)
 
   return (
     <div className="space-y-6">
@@ -100,8 +101,7 @@ export default async function PatientDocumentsPage({ params }: { params: { patie
             </CardHeader>
             <CardContent className="space-y-3">
               <DetailItem label="Email" value={patientDetails.email} icon={Mail} />
-              <DetailItem label="Téléphone" value={patientDetails.numero_de_telephone} icon={Phone} />
-              <DetailItem label="Adresse" value={patientDetails.adresse} icon={MapPin} />
+              <DetailItem label="Téléphone" value={patientDetails.phone} icon={Phone} />
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <DetailItem
                   label="Poids"
