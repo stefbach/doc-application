@@ -41,7 +41,7 @@ interface PatientsTrackingTableProps {
 type SortField = "name" | "documents" | "completion" | "missing"
 type SortDirection = "asc" | "desc"
 type FilterStatus = "all" | "complete" | "incomplete" | "empty"
-type MissingDocumentFilter = "all" | "Facture" | "Contrat" | "Simulation Financière" | "Compte Rendu Hospitalisation" | "Compte Rendu Consultation" | "Lettre GP" | "Formulaire S2"
+type MissingDocumentFilter = "all" | "Facture" | "Contrat" | "Simulation Financière" | "Compte Rendu Hospitalisation" | "Compte Rendu Consultation" | "Lettre GP" | "Formulaire S2" | "Autre"
 
 export function PatientsTrackingTable({ patients }: PatientsTrackingTableProps) {
   const [searchQuery, setSearchQuery] = useState("")
@@ -71,9 +71,15 @@ export function PatientsTrackingTable({ patients }: PatientsTrackingTableProps) 
       })
     }
 
-    // Filtrage par document manquant
+    // Filtrage par document manquant OU documents "Autre"
     if (missingDocFilter !== "all") {
-      result = result.filter((p) => p.missingCategories.includes(missingDocFilter))
+      if (missingDocFilter === "Autre") {
+        // Filtre spécial pour les patients avec documents "Autre"
+        result = result.filter((p) => p.documentsByCategory["Autre"] && p.documentsByCategory["Autre"] > 0)
+      } else {
+        // Filtre pour les patients sans un document spécifique
+        result = result.filter((p) => p.missingCategories.includes(missingDocFilter))
+      }
     }
 
     // Tri
@@ -99,7 +105,7 @@ export function PatientsTrackingTable({ patients }: PatientsTrackingTableProps) 
     })
 
     return result
-  }, [patients, searchQuery, sortField, sortDirection, filterStatus])
+  }, [patients, searchQuery, sortField, sortDirection, filterStatus, missingDocFilter])
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
@@ -189,6 +195,7 @@ export function PatientsTrackingTable({ patients }: PatientsTrackingTableProps) 
               <SelectItem value="Compte Rendu Consultation">Patients sans Compte Rendu Consultation</SelectItem>
               <SelectItem value="Lettre GP">Patients sans Lettre GP</SelectItem>
               <SelectItem value="Formulaire S2">Patients sans Formulaire S2</SelectItem>
+              <SelectItem value="Autre">Patients avec documents "Autre"</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -278,11 +285,19 @@ export function PatientsTrackingTable({ patients }: PatientsTrackingTableProps) 
                 filteredAndSortedPatients.map((patientStatus) => {
                   const isComplete = patientStatus.completionPercentage === 100
                   const hasIssues = patientStatus.missingCategories.length > 0
+                  const hasAutreDocuments = patientStatus.documentsByCategory["Autre"] && patientStatus.documentsByCategory["Autre"] > 0
 
                   return (
                     <TableRow key={patientStatus.patientId}>
                       <TableCell className="font-medium">
-                        {patientStatus.patientName || `Patient ${patientStatus.patientId.substring(0, 8)}...`}
+                        <div className="flex items-center gap-2">
+                          <span>{patientStatus.patientName || `Patient ${patientStatus.patientId.substring(0, 8)}...`}</span>
+                          {hasAutreDocuments && (
+                            <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                              Autre ({patientStatus.documentsByCategory["Autre"]})
+                            </Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-center">{patientStatus.totalDocuments}</TableCell>
                       <TableCell>
