@@ -1,0 +1,31 @@
+🔧 CORRECTION APPLIQUÉE - Conflit pnpm-lock.yaml
+
+PROBLÈME DÉTECTÉ :
+Build échoué avec "Command pnpm install exited with 1"
+Le fichier pnpm-lock.yaml était obsolète et contenait Next.js 15.2.4
+
+SOLUTION APPLIQUÉE :
+1. ✅ Suppression de pnpm-lock.yaml (commit e90f6d7)
+2. ✅ Ajout de .npmrc pour configuration pnpm (commit 0c91112)
+3. ✅ Vercel va maintenant regénérer un lockfile propre avec Next.js 15.3.0
+
+RÉSULTAT ATTENDU :
+- Vercel installe Next.js 15.3.0
+- Build réussit sans erreur de lockfile
+- Déploiement complet avec toutes les fonctionnalités
+
+STATUS : 🟡 Déploiement Vercel en cours (2-3 minutes)
+
+COMMITS :
+- 0c91112 : Configuration pnpm
+- e90f6d7 : Suppression lockfile obsolète
+- c13de79 : Update Next.js 15.3.0
+- a8a84b2 : Fonctionnalités (liste 45 patients + filtres)
+
+APPLICATION URL :
+https://v0-supabase-patient-integrat-git-a9277c-bachs-projects-25b173f6.vercel.app
+
+SURVEILLANCE :
+https://vercel.com/stefbach/doc-application
+
+Date : 2025-12-14
