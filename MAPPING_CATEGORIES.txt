@@ -1,0 +1,87 @@
+🔄 SYSTÈME DE MAPPING DES CATÉGORIES
+
+PROBLÈME RÉSOLU :
+Les documents avec l'ancienne catégorie "Formulaire S2" doivent être reconnus 
+comme "S2 Form" dans le nouveau système.
+
+SOLUTION IMPLÉMENTÉE (commit 8e1fec6) :
+
+✅ MAPPING AUTOMATIQUE À L'EXÉCUTION
+Aucune migration SQL nécessaire ! Le mapping se fait automatiquement quand 
+l'application lit les documents.
+
+┌─────────────────────────────────┬──────────────────────┐
+│ ANCIENNE CATÉGORIE              │ NOUVELLE CATÉGORIE   │
+├─────────────────────────────────┼──────────────────────┤
+│ Formulaire S2                   │ → S2 Form            │
+│ Facture                         │ → Autre              │
+│ Contrat                         │ → Autre              │
+│ Simulation Financière           │ → Autre              │
+│ Compte Rendu Hospitalisation    │ → Autre              │
+└─────────────────────────────────┴──────────────────────┘
+
+COMMENT ÇA FONCTIONNE :
+
+1. UN DOCUMENT EXISTE AVEC "Formulaire S2"
+   - Stocké dans la base : document_category = "Formulaire S2"
+   
+2. L'APPLICATION LIT CE DOCUMENT
+   - Fonction normalizeCategory() convertit automatiquement
+   - "Formulaire S2" → "S2 Form"
+   
+3. LE DOCUMENT EST COMPTABILISÉ CORRECTEMENT
+   - Apparaît dans la catégorie "S2 Form"
+   - Compte dans le calcul de complétion
+   - Filtres fonctionnent correctement
+
+AVANTAGES :
+
+✅ Aucune modification de la base de données
+✅ Les anciens documents fonctionnent immédiatement
+✅ Pas de risque de perte de données
+✅ Conversion transparente pour l'utilisateur
+✅ Facile à maintenir et étendre
+
+FONCTION AJOUTÉE :
+
+```typescript
+// app/actions/types.ts
+export function normalizeCategory(category: string | null): string {
+  if (!category) return "Autre"
+  return CATEGORY_MAPPING[category] || "Autre"
+}
+```
+
+EXEMPLE CONCRET :
+
+Patient avec documents :
+- "Formulaire S2" (ancienne catégorie) ✅ → Compté comme "S2 Form"
+- "Devis" (nouvelle catégorie) ✅ → Compté comme "Devis"
+- "Facture" (ancienne catégorie supprimée) ✅ → Compté comme "Autre"
+
+RÉSULTAT :
+- Complétion : 2/9 = 22% (S2 Form + Devis)
+- Documents "Autre" : 1 (Facture)
+- Total documents : 3
+
+DÉPLOIEMENT :
+
+Cette modification est 100% compatible avec vos données existantes.
+Aucune action requise de votre part !
+
+Les documents avec "Formulaire S2" seront automatiquement reconnus 
+comme "S2 Form" dès le prochain déploiement.
+
+STATUS : 🟡 Déploiement Vercel en cours (2-3 minutes)
+
+APPLICATION :
+https://v0-supabase-patient-integrat-git-a9277c-bachs-projects-25b173f6.vercel.app
+
+HISTORIQUE :
+8e1fec6 - Ajout mapping catégories (compatibilité arrière)
+766e07f - Mise à jour catégories documents
+7cf58b0 - Filtre "Autre" + badge visuel
+5e1e24a - Fix erreur page documents
+
+Date : 2025-12-14
+Commit : 8e1fec6
